@@ -15,6 +15,8 @@ export function criarRotasDeAvaliacoes(controller: AvaliacoesController): Router
   const adminOuProfessor = autorizar('ADMINISTRADOR', 'PROFESSOR')
 
   rotas.get('/', validar({ consulta: listarAvaliacoesQuerySchema }), controller.listar)
+  // Antes de /:id, senão "faixas" seria lido como um id.
+  rotas.get('/faixas', controller.faixas)
   rotas.get('/:id', validar({ parametros: idSchema }), controller.obter)
   rotas.post('/', adminOuProfessor, validar({ corpo: criarAvaliacaoSchema }), controller.registrar)
   rotas.put(

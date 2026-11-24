@@ -6,7 +6,7 @@ import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { listarUsuarios } from '@/features/usuarios/services/usuarios.service.ts'
 import { renderizar, USUARIO_EXEMPLO } from '@/testes/renderizar.tsx'
-import { excluirAvaliacao, listarAvaliacoes } from '../services/avaliacoes.service.ts'
+import { excluirAvaliacao, listarAvaliacoes, listarFaixasImc } from '../services/avaliacoes.service.ts'
 import { ListaDeAvaliacoes } from './ListaDeAvaliacoes.tsx'
 
 vi.mock('next/link', () => ({
@@ -16,7 +16,11 @@ vi.mock('next/link', () => ({
     </a>
   ),
 }))
-vi.mock('../services/avaliacoes.service.ts', () => ({ listarAvaliacoes: vi.fn(), excluirAvaliacao: vi.fn() }))
+vi.mock('../services/avaliacoes.service.ts', () => ({
+  listarAvaliacoes: vi.fn(),
+  excluirAvaliacao: vi.fn(),
+  listarFaixasImc: vi.fn(),
+}))
 vi.mock('@/features/usuarios/services/usuarios.service.ts', () => ({ listarUsuarios: vi.fn() }))
 
 const PAULO = '22222222-2222-4222-8222-222222222222'
@@ -58,6 +62,12 @@ describe('ListaDeAvaliacoes (RF5, RN2, RN3, RN5, RN6, RN7)', () => {
   beforeEach(() => {
     vi.mocked(listarAvaliacoes).mockReset().mockResolvedValue(pagina())
     vi.mocked(excluirAvaliacao).mockReset().mockResolvedValue(undefined)
+    vi.mocked(listarFaixasImc)
+      .mockReset()
+      .mockResolvedValue([
+        { codigo: 'PESO_NORMAL', descricao: 'Peso normal', minimo: 18.5 },
+        { codigo: 'SOBREPESO', descricao: 'Sobrepeso', minimo: 25 },
+      ])
     vi.mocked(listarUsuarios)
       .mockReset()
       .mockResolvedValue({ itens: [USUARIO_EXEMPLO], total: 1, pagina: 1, limite: 100 })
@@ -122,13 +132,33 @@ describe('ListaDeAvaliacoes (RF5, RN2, RN3, RN5, RN6, RN7)', () => {
     await pessoa.type(screen.getByLabelText('Até'), '2026-09-30')
     await pessoa.click(screen.getByRole('button', { name: 'Filtrar' }))
     await waitFor(() => {
-      expect(listarAvaliacoes).toHaveBeenLastCalledWith({
+      expect(listarAvaliacoes).toHaveBeenCalledWith({
         pagina: 1,
         alunoId: USUARIO_EXEMPLO.id,
         de: '2026-09-01',
         ate: '2026-09-30',
       })
     })
+  })
+
+  it('o aluno vê o gráfico da própria evolução, com o IMC atual e a variação desde a primeira avaliação', async () => {
+    renderizar(<ListaDeAvaliacoes ator={ALUNO} />)
+    expect(await screen.findByRole('heading', { name: 'Evolução do IMC' })).toBeDefined()
+    expect(listarAvaliacoes).toHaveBeenCalledWith({ pagina: 1, limite: 100, alunoId: ALUNO.id })
+    expect(screen.getByText('IMC atual')).toBeDefined()
+    expect(screen.getByText('+1,8')).toBeDefined()
+    expect(screen.getByText('desde 14/09/2026')).toBeDefined()
+  })
+
+  it('para o administrador, o gráfico aparece quando a lista é filtrada por um aluno', async () => {
+    renderizar(<ListaDeAvaliacoes ator={ADMIN} />)
+    expect(await screen.findByText(/Filtre por um aluno/)).toBeDefined()
+    expect(screen.queryByRole('heading', { name: 'Evolução do IMC' })).toBeNull()
+    const pessoa = userEvent.setup()
+    await pessoa.selectOptions(await screen.findByLabelText('Aluno'), USUARIO_EXEMPLO.id)
+    await pessoa.click(screen.getByRole('button', { name: 'Filtrar' }))
+    expect(await screen.findByRole('heading', { name: 'Evolução do IMC' })).toBeDefined()
+    expect(screen.queryByText(/Filtre por um aluno/)).toBeNull()
   })
 
   it('mostra o estado vazio', async () => {

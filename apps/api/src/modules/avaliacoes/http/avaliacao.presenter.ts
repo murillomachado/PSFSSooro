@@ -1,7 +1,7 @@
-import type { AvaliacaoResposta, PaginaDeAvaliacoes } from '@psfssooro/contracts'
+import type { AvaliacaoResposta, FaixaImcResposta, PaginaDeAvaliacoes } from '@psfssooro/contracts'
 import type { PaginaDe } from '../../../shared/paginacao.ts'
 import type { AvaliacaoDetalhada } from '../application/detalhes.ts'
-import { descreverFaixa } from '../domain/imc.ts'
+import { descreverFaixa, type FaixaImc } from '../domain/imc.ts'
 import { emMetros, emQuilos } from '../domain/medidas.ts'
 
 /** Converte o que o domínio guarda (inteiros) nas unidades da API: metros, quilos e IMC com uma casa. */
@@ -23,3 +23,7 @@ export function paraResposta({ avaliacao, alunoNome, professorNome }: AvaliacaoD
 export function paginaParaResposta(pagina: PaginaDe<AvaliacaoDetalhada>): PaginaDeAvaliacoes {
   return { ...pagina, itens: pagina.itens.map(paraResposta) }
 }
+
+/** O catálogo de faixas na unidade da API (IMC com uma casa), para o front-end desenhar a escala sem repeti-la. */
+export const faixasParaResposta = (faixas: readonly FaixaImc[]): FaixaImcResposta[] =>
+  faixas.map(({ codigo, descricao, minimoEmDecimos }) => ({ codigo, descricao, minimo: minimoEmDecimos / 10 }))

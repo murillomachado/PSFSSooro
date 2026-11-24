@@ -7,10 +7,13 @@ import { Carregando } from '@/components/ui/Carregando.tsx'
 import { DialogoDeConfirmacao } from '@/components/ui/DialogoDeConfirmacao.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
 import { Paginacao } from '@/components/ui/Paginacao.tsx'
+import { Flex, Icon, Text } from '@chakra-ui/react'
+import { LuChartLine } from 'react-icons/lu'
 import { useUsuariosParaEscolha } from '@/features/usuarios/hooks/useUsuarios.ts'
 import { mensagemDeErro } from '@/lib/http-client.ts'
 import { usePaginaValida } from '@/lib/usePaginaValida.ts'
 import type { Ator } from '../ator.ts'
+import { GraficoDeEvolucao } from '../evolucao/GraficoDeEvolucao.tsx'
 import { useExcluirAvaliacao, useListaDeAvaliacoes } from '../hooks/useAvaliacoes.ts'
 import type { FiltrosDeAvaliacoes } from '../services/avaliacoes.service.ts'
 import { FiltrosDeAvaliacoes as Filtros } from './FiltrosDeAvaliacoes.tsx'
@@ -23,6 +26,16 @@ function opcoesDoFiltroDeProfessor(
 ): Opcao[] {
   if (ator.perfil === 'ADMINISTRADOR') return comoOpcoes(professores)
   return ator.perfil === 'PROFESSOR' ? [{ valor: ator.id, texto: 'Somente as minhas' }] : []
+}
+
+/** Para professor e administrador, o gráfico aparece quando a lista é filtrada por um aluno. */
+function ConviteAoGrafico() {
+  return (
+    <Flex align="center" gap="2" mb="5" color="fg.muted" fontSize="sm">
+      <Icon as={LuChartLine} />
+      <Text>Filtre por um aluno para ver o gráfico da evolução do IMC dele.</Text>
+    </Flex>
+  )
 }
 
 export function ListaDeAvaliacoes({ ator }: Readonly<{ ator: Ator }>) {
@@ -43,6 +56,8 @@ export function ListaDeAvaliacoes({ ator }: Readonly<{ ator: Ator }>) {
   // O professor não lista professores: o filtro dele é "só as que eu realizei".
   const opcoesDeProfessor = opcoesDoFiltroDeProfessor(ator, professores.data?.itens)
   const erro = [lista.error, exclusao.error].find((e) => e !== null)
+  // O aluno vê sempre a própria evolução (RN7).
+  const alunoDoGrafico = ator.perfil === 'ALUNO' ? ator.id : filtros.alunoId
 
   const confirmarExclusao = () => {
     if (paraExcluir === undefined) return
@@ -66,6 +81,7 @@ export function ListaDeAvaliacoes({ ator }: Readonly<{ ator: Ator }>) {
           definirFiltros({ ...novos, pagina: 1 })
         }}
       />
+      {alunoDoGrafico === undefined ? <ConviteAoGrafico /> : <GraficoDeEvolucao alunoId={alunoDoGrafico} />}
       {erro !== undefined && <MensagemDeErro mensagem={mensagemDeErro(erro)} />}
       {lista.data === undefined ? (
         lista.isPending && <Carregando />

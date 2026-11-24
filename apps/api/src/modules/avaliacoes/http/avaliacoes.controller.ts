@@ -5,7 +5,8 @@ import type { ListarAvaliacoes, ObterAvaliacao } from '../application/consultar-
 import type { EditarAvaliacao } from '../application/editar-avaliacao.ts'
 import type { ExcluirAvaliacao } from '../application/excluir-avaliacao.ts'
 import type { RegistrarAvaliacao } from '../application/registrar-avaliacao.ts'
-import { paginaParaResposta, paraResposta } from './avaliacao.presenter.ts'
+import { FAIXAS_IMC } from '../domain/imc.ts'
+import { faixasParaResposta, paginaParaResposta, paraResposta } from './avaliacao.presenter.ts'
 
 export interface CasosDeUsoDeAvaliacoes {
   readonly listar: ListarAvaliacoes
@@ -18,6 +19,10 @@ export interface CasosDeUsoDeAvaliacoes {
 /** Só HTTP: lê a requisição já validada, chama o caso de uso e devolve a resposta. */
 export class AvaliacoesController {
   constructor(private readonly casos: CasosDeUsoDeAvaliacoes) {}
+
+  faixas = (_req: Request, res: Response): void => {
+    res.json(faixasParaResposta(FAIXAS_IMC))
+  }
 
   listar = async (_req: Request, res: Response): Promise<void> => {
     const pagina = await this.casos.listar.executar(atorDe(res), res.locals.consulta as ListarAvaliacoesQuery)

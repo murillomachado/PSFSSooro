@@ -1,4 +1,5 @@
-import type { AvaliacaoResposta, PaginaDeAvaliacoes, Problema } from '@psfssooro/contracts'
+import type { AvaliacaoResposta, FaixaImcResposta, PaginaDeAvaliacoes, Problema } from '@psfssooro/contracts'
+import request from 'supertest'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { type Ambiente, type ClienteAutenticado, criarAmbiente } from './ambiente.ts'
 
@@ -107,6 +108,15 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
   })
 
   describe('consultar (RF5, RN3, RN6, RN7)', () => {
+    it('qualquer perfil lê a tabela de faixas do IMC, em ordem e com o IMC onde cada uma começa', async () => {
+      const resposta = await pam.get(`${URL_AVALIACOES}/faixas`)
+      expect(resposta.status).toBe(200)
+      const faixas = resposta.body as FaixaImcResposta[]
+      expect(faixas.map((f) => f.minimo)).toEqual([0, 18.5, 25, 30, 35, 40])
+      expect(faixas[1]).toEqual({ codigo: 'PESO_NORMAL', descricao: 'Peso normal', minimo: 18.5 })
+      expect((await request(ambiente.app).get(`${URL_AVALIACOES}/faixas`)).status).toBe(401)
+    })
+
     it('professor e administrador listam todas, com filtro por aluno, professor e período', async () => {
       const todas = pagina(await dwight.get(URL_AVALIACOES))
       expect(todas.total).toBeGreaterThanOrEqual(5)
