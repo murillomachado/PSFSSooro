@@ -16,8 +16,10 @@ export async function localizarVisivel(usuarios: UsuarioRepository, ator: Ator, 
   return usuario
 }
 
+/** O erro de nome de usuário repetido, o mesmo para o caso de uso e para os repositórios. */
+export const usuarioJaExiste = (): Conflito =>
+  new Conflito('Já existe um usuário com este nome de usuário.', 'USUARIO_JA_EXISTE')
+
 export async function garantirUsuarioLivre(usuarios: UsuarioRepository, usuario: string): Promise<void> {
-  if ((await usuarios.buscarPorUsuario(usuario)) !== undefined) {
-    throw new Conflito('Já existe um usuário com este nome de usuário.', 'USUARIO_JA_EXISTE')
-  }
+  if ((await usuarios.buscarPorUsuario(usuario)) !== undefined) throw usuarioJaExiste()
 }

@@ -1,4 +1,5 @@
 import type { PaginaDe } from '../../../shared/paginacao.ts'
+import { usuarioJaExiste } from '../application/regras-compartilhadas.ts'
 import type { FiltrosDeUsuario, UsuarioRepository } from '../application/usuario-repository.ts'
 import type { Usuario } from '../domain/usuario.ts'
 
@@ -20,7 +21,7 @@ export class MemoriaUsuarioRepository implements UsuarioRepository {
       .filter((usuario) => filtros.perfis.includes(usuario.perfil))
       .filter((usuario) => filtros.ativo === undefined || usuario.ativo === filtros.ativo)
       .filter((usuario) => usuario.nome.toLowerCase().includes(busca) || usuario.usuario.includes(busca))
-      .sort((a, b) => a.nome.localeCompare(b.nome))
+      .sort((a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id))
     const inicio = (filtros.pagina - 1) * filtros.limite
     return Promise.resolve({
       itens: filtrados.slice(inicio, inicio + filtros.limite),
@@ -31,6 +32,10 @@ export class MemoriaUsuarioRepository implements UsuarioRepository {
   }
 
   salvar(usuario: Usuario): Promise<void> {
+    const repetido = [...this.usuarios.values()].some(
+      (outro) => outro.usuario === usuario.usuario && outro.id !== usuario.id,
+    )
+    if (repetido) return Promise.reject(usuarioJaExiste())
     this.usuarios.set(usuario.id, usuario)
     return Promise.resolve()
   }

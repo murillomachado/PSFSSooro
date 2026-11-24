@@ -1,5 +1,6 @@
-import type { DataSource, Repository } from 'typeorm'
+import { type DataSource, QueryFailedError, type Repository } from 'typeorm'
 import type { PaginaDe } from '../../../shared/paginacao.ts'
+import { usuarioJaExiste } from '../application/regras-compartilhadas.ts'
 import type { FiltrosDeUsuario, UsuarioRepository } from '../application/usuario-repository.ts'
 import type { Usuario } from '../domain/usuario.ts'
 import { UsuarioEntity } from './usuario.entity.ts'
@@ -37,6 +38,7 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
     }
     const [entidades, total] = await consulta
       .orderBy('u.nome', 'ASC')
+      .addOrderBy('u.id', 'ASC')
       .skip((filtros.pagina - 1) * filtros.limite)
       .take(filtros.limite)
       .getManyAndCount()
@@ -44,7 +46,16 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
   }
 
   async salvar(usuario: Usuario): Promise<void> {
-    await this.repositorio.save(paraPersistencia(usuario))
+    try {
+      await this.repositorio.save(paraPersistencia(usuario))
+    } catch (erro) {
+      // Duas requisições simultâneas podem passar pela checagem prévia; o índice único do banco é a
+      // palavra final, e a violação dele vira o mesmo conflito (409) do caso de uso.
+      if (erro instanceof QueryFailedError && erro.message.includes('UNIQUE constraint failed: usuarios.usuario')) {
+        throw usuarioJaExiste()
+      }
+      throw erro
+    }
   }
 
   contarAdministradoresAtivos(): Promise<number> {

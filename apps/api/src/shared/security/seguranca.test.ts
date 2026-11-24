@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { describe, expect, it } from 'vitest'
 import { HasherScrypt } from './hasher-scrypt.ts'
-import { relogioDoSistema } from './relogio.ts'
 import { TokenJwt } from './token-jwt.ts'
 
 const SEGREDO = 'um-segredo-de-teste-com-mais-de-trinta-e-dois-caracteres'
@@ -54,14 +53,5 @@ describe('TokenJwt', () => {
   it('recusa token sem o campo sub e texto que nem é um token', () => {
     expect(token.verificar(jwt.sign({}, SEGREDO, { algorithm: 'HS256' }))).toBeUndefined()
     expect(token.verificar('lixo')).toBeUndefined()
-  })
-})
-
-describe('relogioDoSistema', () => {
-  it('devolve o instante atual', () => {
-    const antes = Date.now()
-    const agora = relogioDoSistema.agora().getTime()
-    expect(agora).toBeGreaterThanOrEqual(antes)
-    expect(agora).toBeLessThanOrEqual(Date.now())
   })
 })

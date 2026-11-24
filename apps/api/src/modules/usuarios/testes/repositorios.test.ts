@@ -57,6 +57,14 @@ describe.each([
     expect((await repositorio().listar({ perfis: TODOS, pagina: 1, limite: 10 })).total).toBe(1)
   })
 
+  it('recusa dois usuários com o mesmo nome de usuário com um conflito (409), e não com um erro do banco', async () => {
+    await repositorio().salvar(novoUsuario({ usuario: 'aluno.ana' }))
+    await expect(repositorio().salvar(novoUsuario({ usuario: 'aluno.ana' }))).rejects.toMatchObject({
+      status: 409,
+      codigo: 'USUARIO_JA_EXISTE',
+    })
+  })
+
   it('conta só os administradores ativos', async () => {
     await repositorio().salvar(administrador({ id: 'a1', usuario: 'admin1' }))
     await repositorio().salvar(administrador({ id: 'a2', usuario: 'admin2', ativo: false }))
@@ -80,6 +88,17 @@ describe.each([
     it('ordena por nome e informa o total', async () => {
       expect(await nomes()).toEqual(['Ana', 'Bruno', 'Carlos', 'Zélia Admin'])
       expect((await repositorio().listar({ perfis: TODOS, pagina: 1, limite: 2 })).total).toBe(4)
+    })
+
+    it('mantém a ordem estável entre páginas quando há nomes repetidos', async () => {
+      for (const usuario of ['ana.um', 'ana.dois', 'ana.tres']) {
+        await repositorio().salvar(novoUsuario({ nome: 'Ana Repetida', usuario }))
+      }
+      const filtros = { perfis: ['ALUNO'] as const, busca: 'repetida', limite: 2 }
+      const primeira = await repositorio().listar({ ...filtros, pagina: 1 })
+      const segunda = await repositorio().listar({ ...filtros, pagina: 2 })
+      const vistos = [...primeira.itens, ...segunda.itens].map((usuario) => usuario.usuario)
+      expect(vistos.toSorted((a, b) => a.localeCompare(b))).toEqual(['ana.dois', 'ana.tres', 'ana.um'])
     })
 
     it('restringe aos perfis informados', async () => {
