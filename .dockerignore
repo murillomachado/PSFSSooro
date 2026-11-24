@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/.next
+**/coverage
+**/*.sqlite
+**/.env
+.git
+.github
+.husky
+docs
+playwright-report
+test-results

@@ -86,7 +86,7 @@ export default defineConfig([
   {
     // Estas regras procuram entrada de usuário chegando a um caminho de arquivo ou a uma chave
     // de objeto. Ficam ligadas no código de produto; em testes e scripts, vêm do repositório.
-    files: ['scripts/**', '**/*.test.ts', '**/*.test.tsx'],
+    files: ['scripts/**', '**/*.test.ts', '**/*.test.tsx', 'apps/e2e/**/*.spec.ts'],
     rules: { 'security/detect-object-injection': 'off', 'security/detect-non-literal-fs-filename': 'off' },
   },
 
@@ -143,7 +143,7 @@ export default defineConfig([
 
   {
     // Testes descrevem cenários, e um describe com vários casos é longo por natureza.
-    files: ['**/*.test.ts', '**/*.test.tsx'],
+    files: ['**/*.test.ts', '**/*.test.tsx', 'apps/e2e/**/*.spec.ts'],
     rules: { 'sonarjs/cognitive-complexity': 'off', 'max-lines-per-function': 'off' },
   },
 ])
