@@ -115,7 +115,10 @@ describe('integridade do banco (RN1)', () => {
     await ambiente.usuarios.salvar(ANA)
     await ambiente.usuarios.salvar(PAULO)
     await ambiente.repositorio.salvar(novaAvaliacao())
-    await expect(ambiente.usuarios.excluir(ANA.id)).rejects.toThrow(/FOREIGN KEY/)
+    await expect(ambiente.usuarios.excluir(ANA.id)).rejects.toMatchObject({
+      status: 409,
+      codigo: 'USUARIO_COM_AVALIACOES',
+    })
     await ambiente.encerrar()
   })
 })

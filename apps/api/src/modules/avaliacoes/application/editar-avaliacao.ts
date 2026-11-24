@@ -51,7 +51,11 @@ export class EditarAvaliacao {
       if (ator.perfil !== 'ADMINISTRADOR') {
         throw new SemPermissao('Só o administrador troca o aluno ou o avaliador.', 'ALTERACAO_NAO_PERMITIDA')
       }
-      await validarParticipantes(this.usuarios, novos.alunoId, novos.professorId)
+      await validarParticipantes(
+        this.usuarios,
+        novos.alunoId === atual.alunoId ? undefined : novos.alunoId,
+        novos.professorId === atual.professorId ? undefined : novos.professorId,
+      )
     }
     if (novos.dataAvaliacao !== atual.dataAvaliacao) garantirDataNaoFutura(this.relogio, novos.dataAvaliacao)
   }

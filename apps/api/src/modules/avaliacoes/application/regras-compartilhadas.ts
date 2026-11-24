@@ -32,23 +32,30 @@ export function garantirDataNaoFutura(relogio: Relogio, dataAvaliacao: string): 
   if (dataAvaliacao > hoje) throw new RegraDeNegocio('A data da avaliação não pode ser futura.', 'DATA_FUTURA')
 }
 
-/** O aluno e o professor precisam existir, ter o perfil certo e estar ativos (RN9, D6). */
+/**
+ * O aluno e o professor informados precisam existir, ter o perfil certo e estar ativos (RN9, D6).
+ * Quem não é informado (porque o vínculo já existia) não é conferido de novo.
+ */
 export async function validarParticipantes(
   usuarios: UsuarioRepository,
-  alunoId: string,
-  professorId: string,
+  alunoId: string | undefined,
+  professorId: string | undefined,
 ): Promise<void> {
-  const aluno = await usuarios.buscarPorId(alunoId)
-  if (aluno?.perfil !== 'ALUNO') throw new NaoEncontrado('Aluno não encontrado.', 'ALUNO_NAO_ENCONTRADO')
-  const professor = await usuarios.buscarPorId(professorId)
-  if (professor?.perfil !== 'PROFESSOR') {
-    throw new NaoEncontrado('Professor não encontrado.', 'PROFESSOR_NAO_ENCONTRADO')
+  if (alunoId !== undefined) {
+    const aluno = await usuarios.buscarPorId(alunoId)
+    if (aluno?.perfil !== 'ALUNO') throw new NaoEncontrado('Aluno não encontrado.', 'ALUNO_NAO_ENCONTRADO')
+    if (!aluno.ativo) {
+      throw new RegraDeNegocio('Não é possível registrar avaliação para um aluno inativo.', 'ALUNO_INATIVO')
+    }
   }
-  if (!aluno.ativo) {
-    throw new RegraDeNegocio('Não é possível registrar avaliação para um aluno inativo.', 'ALUNO_INATIVO')
-  }
-  if (!professor.ativo) {
-    throw new RegraDeNegocio('Não é possível registrar avaliação com um professor inativo.', 'PROFESSOR_INATIVO')
+  if (professorId !== undefined) {
+    const professor = await usuarios.buscarPorId(professorId)
+    if (professor?.perfil !== 'PROFESSOR') {
+      throw new NaoEncontrado('Professor não encontrado.', 'PROFESSOR_NAO_ENCONTRADO')
+    }
+    if (!professor.ativo) {
+      throw new RegraDeNegocio('Não é possível registrar avaliação com um professor inativo.', 'PROFESSOR_INATIVO')
+    }
   }
 }
 

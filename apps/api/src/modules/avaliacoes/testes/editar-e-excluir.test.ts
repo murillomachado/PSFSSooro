@@ -78,6 +78,8 @@ describe('EditarAvaliacao', () => {
       status: 422,
       codigo: 'ALUNO_INATIVO',
     })
+    // Trocar só o professor não reexige que o aluno, já inativo, esteja ativo: o vínculo com ele não é novo.
+    expect((await editar.executar(ADMIN, 'av-1', { professorId: CARLA.id })).avaliacao.professorId).toBe(CARLA.id)
   })
 
   it('responde "não encontrada" para uma avaliação que não existe', async () => {
