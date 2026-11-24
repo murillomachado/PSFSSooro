@@ -20,6 +20,10 @@ export interface Opcao {
   readonly texto: string
 }
 
+/** Usuários da API, na forma de opções de uma lista de escolha. */
+export const comoOpcoes = (itens: readonly { id: string; nome: string }[] | undefined): Opcao[] =>
+  (itens ?? []).map((u) => ({ valor: u.id, texto: u.nome }))
+
 interface Valores {
   alunoId: string
   professorId?: string

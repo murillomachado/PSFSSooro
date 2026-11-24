@@ -13,11 +13,8 @@ import type { Ator } from '../ator.ts'
 import { useExcluirAvaliacao, useListaDeAvaliacoes } from '../hooks/useAvaliacoes.ts'
 import type { FiltrosDeAvaliacoes } from '../services/avaliacoes.service.ts'
 import { FiltrosDeAvaliacoes as Filtros } from './FiltrosDeAvaliacoes.tsx'
-import type { Opcao } from './FormularioDeAvaliacao.tsx'
+import { comoOpcoes, type Opcao } from './FormularioDeAvaliacao.tsx'
 import { TabelaDeAvaliacoes } from './TabelaDeAvaliacoes.tsx'
-
-const comoOpcoes = (itens: readonly { id: string; nome: string }[] | undefined): Opcao[] =>
-  (itens ?? []).map((u) => ({ valor: u.id, texto: u.nome }))
 
 function opcoesDoFiltroDeProfessor(
   ator: Ator,
