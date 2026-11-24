@@ -8,11 +8,9 @@ Leia antes de qualquer trabalho. O objetivo é **passar no teste técnico**: o a
 2. **Prioridade:** (1) requisitos obrigatórios (RF1–RF6, RN1–RN9 e os padrões da seção 6), (2) diferenciais pedidos (testes e Docker), (3) extras. Nada do nível 3 antes de o nível 1 estar inteiro funcionando.
 3. **Cada PR entrega um pedaço de requisito que o avaliador consegue ver funcionando**, e atualiza a tabela do README (usuário de demonstração, caminho na tela, resultado esperado). PRs por módulo, e não por tarefa miúda.
 4. **Testes automatizados só de comportamento do produto.** TDD como método: o teste vem antes do código. Sem ritual de commit vermelho.
-5. **Orçamento de tempo:** cada módulo da API e cada bloco da Web, até 3 horas. Estourou: entregue o que funciona e anote o resto.
-6. **Uma rodada de revisão por PR**, e só entram achados que quebrem um requisito, a segurança ou um limite da especificação. O resto é ignorado ou vira uma linha nas pendências.
-7. **Descrição de PR com até 15 linhas:** o quê, por quê e como ver funcionando.
-8. **Se o ritmo não fecha até domingo:** corta os extras, depois o E2E. Requisito nunca.
-9. **Em dúvida entre mais um polimento e o próximo requisito, faça o requisito.**
+5. **Uma rodada de revisão por PR**, e só entram achados que quebrem um requisito, a segurança ou um limite da especificação. O resto é ignorado ou vira uma linha nas pendências.
+6. **Descrição de PR com até 15 linhas:** o quê, por quê e como ver funcionando.
+7. **Em dúvida entre mais um polimento e o próximo requisito, faça o requisito.**
 
 ## Regras do repositório
 
