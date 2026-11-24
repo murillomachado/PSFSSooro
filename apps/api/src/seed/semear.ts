@@ -15,22 +15,107 @@ interface UsuarioDemo {
 }
 
 export const USUARIOS_DEMO: readonly UsuarioDemo[] = [
-  { nome: 'Administrador', usuario: 'admin', perfil: 'ADMINISTRADOR', ativo: true },
-  { nome: 'Paulo Ferreira', usuario: 'prof.paulo', perfil: 'PROFESSOR', ativo: true },
-  { nome: 'Carla Mendes', usuario: 'prof.carla', perfil: 'PROFESSOR', ativo: true },
-  { nome: 'Ana Souza', usuario: 'aluno.ana', perfil: 'ALUNO', ativo: true },
-  { nome: 'Bruno Lima', usuario: 'aluno.bruno', perfil: 'ALUNO', ativo: true },
-  { nome: 'Diego Inativo', usuario: 'aluno.inativo', perfil: 'ALUNO', ativo: false },
+  { nome: 'Michael Scott', usuario: 'michael.scott', perfil: 'ADMINISTRADOR', ativo: true },
+  { nome: 'Dwight Schrute', usuario: 'dwight.schrute', perfil: 'PROFESSOR', ativo: true },
+  { nome: 'Jim Halpert', usuario: 'jim.halpert', perfil: 'PROFESSOR', ativo: true },
+  { nome: 'Pam Beesly', usuario: 'pam.beesly', perfil: 'ALUNO', ativo: true },
+  { nome: 'Kevin Malone', usuario: 'kevin.malone', perfil: 'ALUNO', ativo: true },
+  { nome: 'Stanley Hudson', usuario: 'stanley.hudson', perfil: 'ALUNO', ativo: true },
+  { nome: 'Andy Bernard', usuario: 'andy.bernard', perfil: 'ALUNO', ativo: true },
+  { nome: 'Angela Martin', usuario: 'angela.martin', perfil: 'ALUNO', ativo: true },
+  { nome: 'Ryan Howard', usuario: 'ryan.howard', perfil: 'ALUNO', ativo: false },
 ]
 
-/** Avaliações de demonstração: [aluno, professor, data, altura em cm, peso em g]. Cobrem várias faixas de IMC. */
-const AVALIACOES_DEMO: readonly (readonly [string, string, string, number, number])[] = [
-  ['aluno.ana', 'prof.paulo', '2026-08-10', 165, 70_000],
-  ['aluno.ana', 'prof.paulo', '2026-09-14', 165, 67_500],
-  ['aluno.ana', 'prof.carla', '2026-10-19', 165, 65_000],
-  ['aluno.bruno', 'prof.carla', '2026-09-01', 178, 95_000],
-  ['aluno.bruno', 'prof.carla', '2026-10-20', 178, 88_000],
+const DWIGHT = 'dwight.schrute'
+const JIM = 'jim.halpert'
+
+interface HistoricoDemo {
+  readonly aluno: string
+  readonly alturaCm: number
+  readonly dia: string
+  /** Professor e peso (g) de cada mês, a partir de maio de 2026. */
+  readonly mensais: readonly (readonly [string, number])[]
+}
+
+/** Seis avaliações mensais por aluno ativo, com tendências diferentes e mudanças de faixa do IMC. */
+const HISTORICOS_DEMO: readonly HistoricoDemo[] = [
+  {
+    aluno: 'pam.beesly',
+    alturaCm: 168,
+    dia: '05',
+    mensais: [
+      [JIM, 67_000],
+      [DWIGHT, 66_000],
+      [JIM, 64_500],
+      [DWIGHT, 63_500],
+      [JIM, 62_500],
+      [DWIGHT, 61_500],
+    ],
+  },
+  {
+    aluno: 'kevin.malone',
+    alturaCm: 173,
+    dia: '12',
+    mensais: [
+      [DWIGHT, 112_000],
+      [DWIGHT, 109_000],
+      [DWIGHT, 106_000],
+      [DWIGHT, 104_000],
+      [DWIGHT, 101_000],
+      [JIM, 99_000],
+    ],
+  },
+  {
+    aluno: 'stanley.hudson',
+    alturaCm: 180,
+    dia: '19',
+    mensais: [
+      [JIM, 99_000],
+      [JIM, 98_000],
+      [JIM, 97_500],
+      [JIM, 96_000],
+      [JIM, 95_000],
+      [JIM, 94_000],
+    ],
+  },
+  {
+    aluno: 'andy.bernard',
+    alturaCm: 183,
+    dia: '08',
+    mensais: [
+      [DWIGHT, 77_000],
+      [DWIGHT, 79_000],
+      [JIM, 80_500],
+      [DWIGHT, 82_000],
+      [DWIGHT, 84_000],
+      [DWIGHT, 85_500],
+    ],
+  },
+  {
+    aluno: 'angela.martin',
+    alturaCm: 155,
+    dia: '26',
+    mensais: [
+      [DWIGHT, 46_500],
+      [JIM, 46_000],
+      [DWIGHT, 45_500],
+      [JIM, 45_000],
+      [DWIGHT, 44_500],
+      [JIM, 44_000],
+    ],
+  },
 ]
+
+const PRIMEIRO_MES = 5
+
+/** Avaliações de demonstração: [aluno, professor, data, altura em cm, peso em g]. */
+export const AVALIACOES_DEMO: readonly (readonly [string, string, string, number, number])[] = HISTORICOS_DEMO.flatMap(
+  ({ aluno, alturaCm, dia, mensais }) =>
+    mensais.map(([professor, pesoG], i) => {
+      const mes = String(PRIMEIRO_MES + i).padStart(2, '0')
+      return [aluno, professor, `2026-${mes}-${dia}`, alturaCm, pesoG] as const
+    }),
+)
 
 export interface DependenciasDoSeed {
   readonly usuarios: UsuarioRepository

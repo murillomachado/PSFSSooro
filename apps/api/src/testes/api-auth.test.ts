@@ -19,9 +19,9 @@ describe('login e sessão (RF6)', () => {
   })
 
   it.each([
-    ['admin', 'ADMINISTRADOR'],
-    ['prof.paulo', 'PROFESSOR'],
-    ['aluno.ana', 'ALUNO'],
+    ['michael.scott', 'ADMINISTRADOR'],
+    ['dwight.schrute', 'PROFESSOR'],
+    ['pam.beesly', 'ALUNO'],
   ])('%s entra com usuário e senha e recebe o token e o perfil %s', async (usuario, perfil) => {
     const resposta = await login(usuario, SENHA_DEMO)
     const corpo = resposta.body as LoginResposta
@@ -32,11 +32,11 @@ describe('login e sessão (RF6)', () => {
   })
 
   it('ignora maiúsculas e espaços no nome de usuário', async () => {
-    expect((await login('  ADMIN ', SENHA_DEMO)).status).toBe(200)
+    expect((await login('  MICHAEL.SCOTT ', SENHA_DEMO)).status).toBe(200)
   })
 
   it('responde igual para senha errada e para usuário inexistente', async () => {
-    const errada = await login('admin', 'senha-errada')
+    const errada = await login('michael.scott', 'senha-errada')
     const inexistente = await login('fantasma', SENHA_DEMO)
     expect(errada.status).toBe(401)
     expect(inexistente.status).toBe(401)
@@ -45,10 +45,10 @@ describe('login e sessão (RF6)', () => {
   })
 
   it('recusa com 403 o usuário inativo que acerta a senha, e com 401 o que erra', async () => {
-    const certa = await login('aluno.inativo', SENHA_DEMO)
+    const certa = await login('ryan.howard', SENHA_DEMO)
     expect(certa.status).toBe(403)
     expect((certa.body as Problema).codigo).toBe('USUARIO_INATIVO')
-    expect((await login('aluno.inativo', 'senha-errada')).status).toBe(401)
+    expect((await login('ryan.howard', 'senha-errada')).status).toBe(401)
   })
 
   it('exige usuário e senha, listando os campos com problema', async () => {
@@ -59,10 +59,10 @@ describe('login e sessão (RF6)', () => {
   })
 
   it('GET /auth/me devolve o usuário do token e recusa token ausente ou adulterado', async () => {
-    const token = await ambiente.entrar('prof.paulo')
+    const token = await ambiente.entrar('dwight.schrute')
     const logado = await ambiente.como(token).get(URL_ME)
     expect(logado.status).toBe(200)
-    expect(logado.body).toMatchObject({ usuario: 'prof.paulo', perfil: 'PROFESSOR' })
+    expect(logado.body).toMatchObject({ usuario: 'dwight.schrute', perfil: 'PROFESSOR' })
     expect((await request(ambiente.app).get(URL_ME)).status).toBe(401)
     expect((await ambiente.como(`${token}x`).get(URL_ME)).status).toBe(401)
   })
@@ -79,18 +79,18 @@ describe('RN8: usuário inativo não acessa o sistema', () => {
   })
 
   it('quem é inativado perde o acesso na hora, mesmo com o token ainda válido, e volta ao ser reativado', async () => {
-    const admin = ambiente.como(await ambiente.entrar('admin'))
-    const tokenDaAna = await ambiente.entrar('aluno.ana')
-    const urlDaSituacao = `/api/usuarios/${await ambiente.idDe('aluno.ana')}/situacao`
-    expect((await ambiente.como(tokenDaAna).get(URL_ME)).status).toBe(200)
+    const admin = ambiente.como(await ambiente.entrar('michael.scott'))
+    const tokenDaPam = await ambiente.entrar('pam.beesly')
+    const urlDaSituacao = `/api/usuarios/${await ambiente.idDe('pam.beesly')}/situacao`
+    expect((await ambiente.como(tokenDaPam).get(URL_ME)).status).toBe(200)
 
     expect((await admin.patch(urlDaSituacao).send({ ativo: false })).status).toBe(200)
-    expect((await ambiente.como(tokenDaAna).get(URL_ME)).status).toBe(401)
-    const tentativa = await request(ambiente.app).post(URL_LOGIN).send({ usuario: 'aluno.ana', senha: SENHA_DEMO })
+    expect((await ambiente.como(tokenDaPam).get(URL_ME)).status).toBe(401)
+    const tentativa = await request(ambiente.app).post(URL_LOGIN).send({ usuario: 'pam.beesly', senha: SENHA_DEMO })
     expect(tentativa.status).toBe(403)
 
     expect((await admin.patch(urlDaSituacao).send({ ativo: true })).status).toBe(200)
-    const volta = await ambiente.como(tokenDaAna).get(URL_ME)
+    const volta = await ambiente.como(tokenDaPam).get(URL_ME)
     expect(volta.status).toBe(200)
     expect((volta.body as UsuarioResposta).ativo).toBe(true)
   })

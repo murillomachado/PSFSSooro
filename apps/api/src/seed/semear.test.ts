@@ -27,30 +27,33 @@ describe('semear', () => {
       'ALUNO',
       'ALUNO',
       'ALUNO',
+      'ALUNO',
+      'ALUNO',
+      'ALUNO',
       'PROFESSOR',
       'PROFESSOR',
     ])
-    expect(pagina.itens.filter((usuario) => !usuario.ativo).map((usuario) => usuario.usuario)).toEqual([
-      'aluno.inativo',
-    ])
+    expect(pagina.itens.filter((usuario) => !usuario.ativo).map((usuario) => usuario.usuario)).toEqual(['ryan.howard'])
     expect(pagina.itens.every((usuario) => usuario.senhaHash === `hash(${SENHA_DEMO})`)).toBe(true)
   })
 
   it('pode rodar mais de uma vez sem duplicar nem sobrescrever', async () => {
     const { usuarios, dependencias } = await montar()
     await semear(dependencias)
-    const admin = await usuarios.buscarPorUsuario('admin')
+    const admin = await usuarios.buscarPorUsuario('michael.scott')
     expect(await semear(dependencias)).toBe(0)
-    expect(await usuarios.buscarPorUsuario('admin')).toEqual(admin)
+    expect(await usuarios.buscarPorUsuario('michael.scott')).toEqual(admin)
   })
 
   it('cria avaliações de demonstração só uma vez, para o aluno ver o histórico e os professores filtrarem', async () => {
     const { avaliacoes, dependencias } = await montar()
     await semear(dependencias)
     const primeira = await avaliacoes.listar({ pagina: 1, limite: 50 })
-    expect(primeira.total).toBe(5)
-    expect(primeira.itens.map((a) => a.classificacao)).toContain('OBESIDADE_I')
+    expect(primeira.total).toBe(30)
+    expect(new Set(primeira.itens.map((a) => a.classificacao))).toEqual(
+      new Set(['ABAIXO_DO_PESO', 'PESO_NORMAL', 'SOBREPESO', 'OBESIDADE_I', 'OBESIDADE_II']),
+    )
     await semear(dependencias)
-    expect((await avaliacoes.listar({ pagina: 1, limite: 50 })).total).toBe(5)
+    expect((await avaliacoes.listar({ pagina: 1, limite: 50 })).total).toBe(30)
   })
 })

@@ -8,24 +8,24 @@ const HOJE = new Date().toISOString().slice(0, 10)
 describe('API de avaliações: IMC, permissões por perfil e exclusão de usuários', () => {
   let ambiente: Ambiente
   let admin: ClienteAutenticado
-  let paulo: ClienteAutenticado
-  let carla: ClienteAutenticado
-  let ana: ClienteAutenticado
-  let idAna: string
-  let idBruno: string
-  let idPaulo: string
-  let idCarla: string
+  let dwight: ClienteAutenticado
+  let jim: ClienteAutenticado
+  let pam: ClienteAutenticado
+  let idPam: string
+  let idKevin: string
+  let idDwight: string
+  let idJim: string
 
   beforeAll(async () => {
     ambiente = await criarAmbiente()
-    admin = ambiente.como(await ambiente.entrar('admin'))
-    paulo = ambiente.como(await ambiente.entrar('prof.paulo'))
-    carla = ambiente.como(await ambiente.entrar('prof.carla'))
-    ana = ambiente.como(await ambiente.entrar('aluno.ana'))
-    idAna = await ambiente.idDe('aluno.ana')
-    idBruno = await ambiente.idDe('aluno.bruno')
-    idPaulo = await ambiente.idDe('prof.paulo')
-    idCarla = await ambiente.idDe('prof.carla')
+    admin = ambiente.como(await ambiente.entrar('michael.scott'))
+    dwight = ambiente.como(await ambiente.entrar('dwight.schrute'))
+    jim = ambiente.como(await ambiente.entrar('jim.halpert'))
+    pam = ambiente.como(await ambiente.entrar('pam.beesly'))
+    idPam = await ambiente.idDe('pam.beesly')
+    idKevin = await ambiente.idDe('kevin.malone')
+    idDwight = await ambiente.idDe('dwight.schrute')
+    idJim = await ambiente.idDe('jim.halpert')
   })
   afterAll(async () => {
     await ambiente.banco.destroy()
@@ -35,7 +35,7 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
   const pagina = (resposta: { body: unknown }): PaginaDeAvaliacoes => resposta.body as PaginaDeAvaliacoes
   const problema = (resposta: { body: unknown }): Problema => resposta.body as Problema
   const nova = (extra: Record<string, unknown> = {}): Record<string, unknown> => ({
-    alunoId: idBruno,
+    alunoId: idKevin,
     dataAvaliacao: HOJE,
     alturaM: 1.75,
     pesoKg: 72,
@@ -44,11 +44,11 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
 
   describe('registrar (RF3, RF4, RN9)', () => {
     it('o professor registra; o IMC e a classificação vêm calculados pela API', async () => {
-      const resposta = await paulo.post(URL_AVALIACOES).send(nova())
+      const resposta = await dwight.post(URL_AVALIACOES).send(nova())
       expect(resposta.status).toBe(201)
       expect(avaliacao(resposta)).toMatchObject({
-        aluno: { id: idBruno, nome: 'Bruno Lima' },
-        professor: { id: idPaulo, nome: 'Paulo Ferreira' },
+        aluno: { id: idKevin, nome: 'Kevin Malone' },
+        professor: { id: idDwight, nome: 'Dwight Schrute' },
         alturaM: 1.75,
         pesoKg: 72,
         imc: 23.5,
@@ -57,7 +57,7 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
     })
 
     it('ignora um IMC enviado pelo cliente: quem calcula é a API', async () => {
-      const resposta = await paulo.post(URL_AVALIACOES).send(nova({ imc: 10, classificacao: 'ABAIXO_DO_PESO' }))
+      const resposta = await dwight.post(URL_AVALIACOES).send(nova({ imc: 10, classificacao: 'ABAIXO_DO_PESO' }))
       expect(avaliacao(resposta)).toMatchObject({ imc: 23.5, classificacao: { codigo: 'PESO_NORMAL' } })
     })
 
@@ -69,67 +69,74 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
       [1.75, 110, 35.9, 'Obesidade grau II'],
       [1.75, 130, 42.4, 'Obesidade grau III'],
     ])('altura %s m e peso %s kg dão IMC %s: %s', async (alturaM, pesoKg, imc, descricao) => {
-      const resposta = await admin.post(URL_AVALIACOES).send(nova({ alturaM, pesoKg, professorId: idPaulo }))
+      const resposta = await admin.post(URL_AVALIACOES).send(nova({ alturaM, pesoKg, professorId: idDwight }))
       expect(avaliacao(resposta)).toMatchObject({ imc, classificacao: { descricao } })
     })
 
     it('o administrador escolhe o professor; o professor não registra em nome de outro (403)', async () => {
-      const doAdmin = await admin.post(URL_AVALIACOES).send(nova({ professorId: idCarla }))
-      expect(avaliacao(doAdmin).professor.id).toBe(idCarla)
+      const doAdmin = await admin.post(URL_AVALIACOES).send(nova({ professorId: idJim }))
+      expect(avaliacao(doAdmin).professor.id).toBe(idJim)
       expect((await admin.post(URL_AVALIACOES).send(nova())).status).toBe(400)
-      expect((await paulo.post(URL_AVALIACOES).send(nova({ professorId: idCarla }))).status).toBe(403)
+      expect((await dwight.post(URL_AVALIACOES).send(nova({ professorId: idJim }))).status).toBe(403)
     })
 
     it('o aluno não registra (403)', async () => {
-      expect((await ana.post(URL_AVALIACOES).send(nova({ alunoId: idAna }))).status).toBe(403)
+      expect((await pam.post(URL_AVALIACOES).send(nova({ alunoId: idPam }))).status).toBe(403)
     })
 
     it('recusa medidas e datas inválidas (400) e data futura (422)', async () => {
-      const invalida = await paulo.post(URL_AVALIACOES).send(nova({ alturaM: 0.3, pesoKg: 5, dataAvaliacao: 'ontem' }))
+      const invalida = await dwight.post(URL_AVALIACOES).send(nova({ alturaM: 0.3, pesoKg: 5, dataAvaliacao: 'ontem' }))
       expect(invalida.status).toBe(400)
       expect(
         problema(invalida)
           .campos?.map((campo) => campo.campo)
           .toSorted((a, b) => a.localeCompare(b)),
       ).toEqual(['alturaM', 'dataAvaliacao', 'pesoKg'])
-      expect((await paulo.post(URL_AVALIACOES).send(nova({ alturaM: 1.755 }))).status).toBe(400)
-      const futura = await paulo.post(URL_AVALIACOES).send(nova({ dataAvaliacao: '2999-01-01' }))
+      expect((await dwight.post(URL_AVALIACOES).send(nova({ alturaM: 1.755 }))).status).toBe(400)
+      const futura = await dwight.post(URL_AVALIACOES).send(nova({ dataAvaliacao: '2999-01-01' }))
       expect(futura.status).toBe(422)
       expect(problema(futura).codigo).toBe('DATA_FUTURA')
     })
 
     it('não registra para aluno inativo (422) nem para quem não é aluno (404)', async () => {
-      const inativo = await paulo.post(URL_AVALIACOES).send(nova({ alunoId: await ambiente.idDe('aluno.inativo') }))
+      const inativo = await dwight.post(URL_AVALIACOES).send(nova({ alunoId: await ambiente.idDe('ryan.howard') }))
       expect(inativo.status).toBe(422)
       expect(problema(inativo).codigo).toBe('ALUNO_INATIVO')
-      expect((await paulo.post(URL_AVALIACOES).send(nova({ alunoId: idCarla }))).status).toBe(404)
+      expect((await dwight.post(URL_AVALIACOES).send(nova({ alunoId: idJim }))).status).toBe(404)
     })
   })
 
   describe('consultar (RF5, RN3, RN6, RN7)', () => {
     it('professor e administrador listam todas, com filtro por aluno, professor e período', async () => {
-      const todas = pagina(await paulo.get(URL_AVALIACOES))
+      const todas = pagina(await dwight.get(URL_AVALIACOES))
       expect(todas.total).toBeGreaterThanOrEqual(5)
-      const deAna = pagina(await paulo.get(`${URL_AVALIACOES}?alunoId=${idAna}`))
-      expect(deAna.itens.every((item) => item.aluno.id === idAna)).toBe(true)
-      expect(deAna.total).toBe(3)
-      const deCarla = pagina(await admin.get(`${URL_AVALIACOES}?professorId=${idCarla}`))
-      expect(deCarla.itens.every((item) => item.professor.id === idCarla)).toBe(true)
-      const periodo = pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idAna}&de=2026-09-01&ate=2026-09-30`))
-      expect(periodo.itens.map((item) => item.dataAvaliacao)).toEqual(['2026-09-14'])
+      const dePam = pagina(await dwight.get(`${URL_AVALIACOES}?alunoId=${idPam}`))
+      expect(dePam.itens.every((item) => item.aluno.id === idPam)).toBe(true)
+      expect(dePam.total).toBe(6)
+      const deJim = pagina(await admin.get(`${URL_AVALIACOES}?professorId=${idJim}`))
+      expect(deJim.itens.every((item) => item.professor.id === idJim)).toBe(true)
+      const periodo = pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idPam}&de=2026-09-01&ate=2026-09-30`))
+      expect(periodo.itens.map((item) => item.dataAvaliacao)).toEqual(['2026-09-05'])
     })
 
     it('o aluno vê só as próprias, mesmo pedindo as de outro aluno (RN7)', async () => {
-      const minhas = pagina(await ana.get(`${URL_AVALIACOES}?alunoId=${idBruno}`))
-      expect(minhas.total).toBe(3)
-      expect(minhas.itens.every((item) => item.aluno.id === idAna)).toBe(true)
-      expect(minhas.itens.map((item) => item.dataAvaliacao)).toEqual(['2026-10-19', '2026-09-14', '2026-08-10'])
+      const minhas = pagina(await pam.get(`${URL_AVALIACOES}?alunoId=${idKevin}`))
+      expect(minhas.total).toBe(6)
+      expect(minhas.itens.every((item) => item.aluno.id === idPam)).toBe(true)
+      expect(minhas.itens.map((item) => item.dataAvaliacao)).toEqual([
+        '2026-10-05',
+        '2026-09-05',
+        '2026-08-05',
+        '2026-07-05',
+        '2026-06-05',
+        '2026-05-05',
+      ])
     })
 
     it('o aluno não abre a avaliação de outro (404); o professor abre (200)', async () => {
-      const doBruno = pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idBruno}`)).itens[0]
-      expect((await ana.get(`${URL_AVALIACOES}/${doBruno?.id}`)).status).toBe(404)
-      expect((await paulo.get(`${URL_AVALIACOES}/${doBruno?.id}`)).status).toBe(200)
+      const doKevin = pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idKevin}`)).itens[0]
+      expect((await pam.get(`${URL_AVALIACOES}/${doKevin?.id}`)).status).toBe(404)
+      expect((await dwight.get(`${URL_AVALIACOES}/${doKevin?.id}`)).status).toBe(200)
     })
 
     it('exige login e recusa filtro inválido', async () => {
@@ -140,24 +147,24 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
 
   describe('editar e excluir (RN2, RN5)', () => {
     it('o professor corrige a própria avaliação, e o IMC é recalculado; a de outro dá 403', async () => {
-      const criada = avaliacao(await paulo.post(URL_AVALIACOES).send(nova()))
-      const editada = await paulo.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 95 })
+      const criada = avaliacao(await dwight.post(URL_AVALIACOES).send(nova()))
+      const editada = await dwight.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 95 })
       expect(editada.status).toBe(200)
       expect(avaliacao(editada)).toMatchObject({ pesoKg: 95, imc: 31, classificacao: { codigo: 'OBESIDADE_I' } })
-      expect((await carla.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 70 })).status).toBe(403)
+      expect((await jim.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 70 })).status).toBe(403)
     })
 
     it('o administrador edita qualquer uma; o aluno não edita nem exclui', async () => {
-      const criada = avaliacao(await paulo.post(URL_AVALIACOES).send(nova()))
-      const trocada = await admin.put(`${URL_AVALIACOES}/${criada.id}`).send({ professorId: idCarla })
-      expect(avaliacao(trocada).professor.id).toBe(idCarla)
-      expect((await ana.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 60 })).status).toBe(403)
-      expect((await ana.delete(`${URL_AVALIACOES}/${criada.id}`)).status).toBe(403)
+      const criada = avaliacao(await dwight.post(URL_AVALIACOES).send(nova()))
+      const trocada = await admin.put(`${URL_AVALIACOES}/${criada.id}`).send({ professorId: idJim })
+      expect(avaliacao(trocada).professor.id).toBe(idJim)
+      expect((await pam.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 60 })).status).toBe(403)
+      expect((await pam.delete(`${URL_AVALIACOES}/${criada.id}`)).status).toBe(403)
     })
 
     it('só o administrador exclui, e depois a avaliação some (404)', async () => {
-      const criada = avaliacao(await paulo.post(URL_AVALIACOES).send(nova()))
-      expect((await paulo.delete(`${URL_AVALIACOES}/${criada.id}`)).status).toBe(403)
+      const criada = avaliacao(await dwight.post(URL_AVALIACOES).send(nova()))
+      expect((await dwight.delete(`${URL_AVALIACOES}/${criada.id}`)).status).toBe(403)
       expect((await admin.delete(`${URL_AVALIACOES}/${criada.id}`)).status).toBe(204)
       expect((await admin.get(`${URL_AVALIACOES}/${criada.id}`)).status).toBe(404)
     })
@@ -171,20 +178,20 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
       expect((await admin.delete(`/api/usuarios/${criado.id}`)).status).toBe(204)
       expect((await admin.get(`/api/usuarios/${criado.id}`)).status).toBe(404)
 
-      const recusa = await admin.delete(`/api/usuarios/${idAna}`)
+      const recusa = await admin.delete(`/api/usuarios/${idPam}`)
       expect(recusa.status).toBe(409)
       expect(problema(recusa).codigo).toBe('USUARIO_COM_AVALIACOES')
-      expect(pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idAna}`)).total).toBe(3)
+      expect(pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idPam}`)).total).toBe(6)
     })
 
     it('só o administrador exclui; ninguém exclui a si mesmo', async () => {
-      expect((await paulo.delete(`/api/usuarios/${idAna}`)).status).toBe(403)
-      const idAdmin = await ambiente.idDe('admin')
+      expect((await dwight.delete(`/api/usuarios/${idPam}`)).status).toBe(403)
+      const idAdmin = await ambiente.idDe('michael.scott')
       expect((await admin.delete(`/api/usuarios/${idAdmin}`)).status).toBe(422)
     })
 
     it('quem tem avaliações não troca de perfil (409)', async () => {
-      const resposta = await admin.put(`/api/usuarios/${idAna}`).send({ perfil: 'PROFESSOR' })
+      const resposta = await admin.put(`/api/usuarios/${idPam}`).send({ perfil: 'PROFESSOR' })
       expect(resposta.status).toBe(409)
     })
   })
