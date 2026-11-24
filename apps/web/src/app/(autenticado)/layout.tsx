@@ -1,6 +1,7 @@
 'use client'
 
-import { Box, Button, Flex, Heading, Text } from '@chakra-ui/react'
+import { Box, Button, Flex, Heading, Link as LinkDoChakra, Text } from '@chakra-ui/react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect } from 'react'
 import { Carregando } from '@/components/ui/Carregando.tsx'
@@ -23,7 +24,17 @@ export default function LayoutAutenticado({ children }: { readonly children: Rea
   return (
     <Box>
       <Flex as="header" align="center" justify="space-between" px="6" py="3" borderBottomWidth="1px">
-        <Heading size="md">Academia</Heading>
+        <Flex align="center" gap="6">
+          <Heading size="md">Academia</Heading>
+          <LinkDoChakra asChild>
+            <Link href="/inicio">Início</Link>
+          </LinkDoChakra>
+          {usuario.perfil !== 'ALUNO' && (
+            <LinkDoChakra asChild>
+              <Link href="/usuarios">{usuario.perfil === 'ADMINISTRADOR' ? 'Usuários' : 'Alunos'}</Link>
+            </LinkDoChakra>
+          )}
+        </Flex>
         <Flex align="center" gap="4">
           <Text>
             {usuario.nome} · {NOME_DO_PERFIL[usuario.perfil]}

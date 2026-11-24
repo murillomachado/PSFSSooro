@@ -45,8 +45,8 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 
 | Código | O que a especificação pede                                         | Como ver                                                                                                                               | Situação |
 | ------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Passos 3 e 4: cadastra e edita usuários dos três perfis                                                                                | ✅ API   |
-| RF2    | Ativar ou inativar um usuário                                      | Passo 5: inativa e reativa um usuário                                                                                                  | ✅ API   |
+| RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Entre como `admin`, abra **Usuários** > **Novo cadastro** e crie os três perfis; **Editar** usa o mesmo formulário                     | ✅       |
+| RF2    | Ativar ou inativar um usuário                                      | Como `admin`, em **Usuários**, **Inativar** / **Ativar** muda a situação na hora                                                       | ✅       |
 | RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Passo 7: o professor registra uma avaliação; altura e peso viram IMC                                                                   | ✅ API   |
 | RF4    | Gravar a classificação do IMC conforme a tabela                    | Passo 7: a resposta traz a classificação (código e descrição)                                                                          | ✅ API   |
 | RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | Passo 8: lista com filtro por aluno, professor e período                                                                               | ✅ API   |
@@ -54,17 +54,17 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 
 ### Regras de negócio
 
-| Código | O que a especificação pede                                                                    | Como ver                                                                        | Situação |
-| ------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------- |
-| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Passos 3 e 4 cadastram e editam; passo 10 exclui (409 se tiver avaliações)      | ✅ API   |
-| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Passo 9: o administrador edita e exclui qualquer avaliação                      | ✅ API   |
-| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Passo 8: o administrador lista as avaliações de qualquer aluno                  | ✅ API   |
-| RN4    | Professor cadastra e edita alunos                                                             | Passo 6: como `prof.paulo`, lista só alunos e cadastra aluno; professor dá 403  | ✅ API   |
-| RN5    | Professor cadastra e edita avaliações                                                         | Passos 7 e 9: o professor registra e edita as suas (403 nas dos colegas)        | ✅ API   |
-| RN6    | Professor consulta as avaliações de seus alunos                                               | Passo 8: o professor lista as avaliações dos alunos                             | ✅ API   |
-| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Passo 8: como `aluno.ana`, só aparecem as dela                                  | ✅ API   |
-| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403 | ✅ API   |
-| RN9    | Usuário inativo não pode ter novas avaliações                                                 | Passo 7: avaliar `aluno.inativo` devolve 422                                    | ✅ API   |
+| Código | O que a especificação pede                                                                    | Como ver                                                                                                                      | Situação |
+| ------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
+| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Como `admin`: cadastra, edita e **Excluir** (com confirmação). Excluir quem tem avaliações (ex.: `aluno.ana`) mostra o motivo | ✅       |
+| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Passo 9: o administrador edita e exclui qualquer avaliação                                                                    | ✅ API   |
+| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Passo 8: o administrador lista as avaliações de qualquer aluno                                                                | ✅ API   |
+| RN4    | Professor cadastra e edita alunos                                                             | Como `prof.paulo`, o menu é **Alunos**: lista só alunos e cadastra/edita aluno, sem escolher perfil nem inativar/excluir      | ✅       |
+| RN5    | Professor cadastra e edita avaliações                                                         | Passos 7 e 9: o professor registra e edita as suas (403 nas dos colegas)                                                      | ✅ API   |
+| RN6    | Professor consulta as avaliações de seus alunos                                               | Passo 8: o professor lista as avaliações dos alunos                                                                           | ✅ API   |
+| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Passo 8: como `aluno.ana`, só aparecem as dela                                                                                | ✅ API   |
+| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403                                               | ✅ API   |
+| RN9    | Usuário inativo não pode ter novas avaliações                                                 | Passo 7: avaliar `aluno.inativo` devolve 422                                                                                  | ✅ API   |
 
 ### Exigências técnicas
 
