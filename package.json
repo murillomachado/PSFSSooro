@@ -8,9 +8,11 @@
   },
   "scripts": {
     "prepare": "husky || true",
+    "postinstall": "pnpm contracts",
+    "contracts": "pnpm --filter @psfssooro/contracts build",
     "check-versions": "node scripts/check-versions.ts",
-    "typecheck": "tsc -p tsconfig.json && pnpm -r --if-present typecheck",
-    "lint": "eslint . --max-warnings 0",
+    "typecheck": "pnpm contracts && tsc -p tsconfig.json && pnpm -r --if-present typecheck",
+    "lint": "pnpm contracts && eslint . --max-warnings 0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "dup": "jscpd .",

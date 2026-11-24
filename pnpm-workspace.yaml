@@ -1,3 +1,8 @@
 packages:
   - apps/*
   - packages/*
+
+# O better-sqlite3 baixa o binário pronto no install. O esbuild (usado pelo tsx) funciona sem o script dele.
+allowBuilds:
+  better-sqlite3: true
+  esbuild: false
