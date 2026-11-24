@@ -40,14 +40,20 @@ export function useSessao(): Sessao {
     roteador.replace('/login')
   }, [clienteDeConsultas, roteador])
 
+  return { carregando: temToken === undefined || (temToken && consulta.isPending), usuario: consulta.data, sair }
+}
+
+/**
+ * Quando a API recusa o token (401), a sessão acabou: sai e volta ao login. Só o layout da área
+ * autenticada chama isto, uma vez; páginas que só leem a sessão usam `useSessao`.
+ */
+export function useSairAoPerderASessao(sair: () => void): void {
   useEffect(() => {
     aoPerderASessaoFazer(sair)
     return () => {
       aoPerderASessaoFazer(undefined)
     }
   }, [sair])
-
-  return { carregando: temToken === undefined || (temToken && consulta.isPending), usuario: consulta.data, sair }
 }
 
 /** Faz o login: guarda o token, põe o usuário na sessão e vai para o início. */

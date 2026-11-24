@@ -4,7 +4,7 @@ import { Box, Button, Flex, Heading, Text } from '@chakra-ui/react'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect } from 'react'
 import { Carregando } from '@/components/ui/Carregando.tsx'
-import { useSessao } from '@/features/auth/hooks/useSessao.ts'
+import { useSairAoPerderASessao, useSessao } from '@/features/auth/hooks/useSessao.ts'
 
 const NOME_DO_PERFIL = { ADMINISTRADOR: 'Administrador', PROFESSOR: 'Professor', ALUNO: 'Aluno' } as const
 
@@ -12,6 +12,7 @@ const NOME_DO_PERFIL = { ADMINISTRADOR: 'Administrador', PROFESSOR: 'Professor',
 export default function LayoutAutenticado({ children }: { readonly children: ReactNode }) {
   const { carregando, usuario, sair } = useSessao()
   const roteador = useRouter()
+  useSairAoPerderASessao(sair)
 
   useEffect(() => {
     if (!carregando && usuario === undefined) roteador.replace('/login')
