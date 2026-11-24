@@ -76,8 +76,9 @@ export default defineConfig([
     rules: {
       // Número dentro de template string (`${total} itens`) não tem risco.
       '@typescript-eslint/restrict-template-expressions': ['error', { allowNumber: true }],
-      // `const { campo: _, ...resto } = obj` é a forma idiomática de remover um campo.
-      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }],
+      // `const { campo: _, ...resto } = obj` remove um campo; `_param` marca um parâmetro que a
+      // assinatura exige e o código não usa (o middleware de erro do Express precisa de 4 parâmetros).
+      '@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true, argsIgnorePattern: '^_' }],
       // Duplica a regra do typescript-eslint acima, sem a opção de rest.
       'sonarjs/no-unused-vars': 'off',
     },
