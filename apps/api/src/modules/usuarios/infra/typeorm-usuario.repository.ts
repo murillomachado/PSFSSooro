@@ -1,4 +1,5 @@
-import { type DataSource, QueryFailedError, type Repository } from 'typeorm'
+import { type DataSource, In, QueryFailedError, type Repository } from 'typeorm'
+import { Conflito } from '../../../shared/errors/erros.ts'
 import type { PaginaDe } from '../../../shared/paginacao.ts'
 import { usuarioJaExiste } from '../application/regras-compartilhadas.ts'
 import type { FiltrosDeUsuario, UsuarioRepository } from '../application/usuario-repository.ts'
@@ -22,6 +23,27 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
   async buscarPorUsuario(usuario: string): Promise<Usuario | undefined> {
     const entidade = await this.repositorio.findOneBy({ usuario })
     return entidade === null ? undefined : paraDominio(entidade)
+  }
+
+  async buscarPorIds(ids: readonly string[]): Promise<Usuario[]> {
+    if (ids.length === 0) return []
+    return (await this.repositorio.findBy({ id: In([...ids]) })).map(paraDominio)
+  }
+
+  async excluir(id: string): Promise<void> {
+    try {
+      await this.repositorio.delete({ id })
+    } catch (erro) {
+      // Se uma avaliação surgir entre a checagem do caso de uso e o DELETE, a chave estrangeira
+      // (RESTRICT) é a palavra final, e vira o mesmo conflito (409) em vez de um erro 500.
+      if (erro instanceof QueryFailedError && erro.message.includes('FOREIGN KEY')) {
+        throw new Conflito(
+          'Este usuário tem avaliações vinculadas e não pode ser excluído. Inative-o em vez de excluir.',
+          'USUARIO_COM_AVALIACOES',
+        )
+      }
+      throw erro
+    }
   }
 
   async listar(filtros: FiltrosDeUsuario): Promise<PaginaDe<Usuario>> {

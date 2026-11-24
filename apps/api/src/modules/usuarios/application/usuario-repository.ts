@@ -17,8 +17,11 @@ export interface UsuarioRepository {
   buscarPorId(id: string): Promise<Usuario | undefined>
   /** Busca pelo nome de usuário do login, sempre em minúsculas. */
   buscarPorUsuario(usuario: string): Promise<Usuario | undefined>
+  /** Os usuários que existem entre os ids pedidos (ids desconhecidos são ignorados). */
+  buscarPorIds(ids: readonly string[]): Promise<Usuario[]>
   listar(filtros: FiltrosDeUsuario): Promise<PaginaDe<Usuario>>
   /** Cria o usuário, ou atualiza se o id já existe. */
   salvar(usuario: Usuario): Promise<void>
+  excluir(id: string): Promise<void>
   contarAdministradoresAtivos(): Promise<number>
 }

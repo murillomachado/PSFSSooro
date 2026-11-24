@@ -41,24 +41,24 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | ------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- | -------- |
 | RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Passos 3 e 4: cadastra e edita usuários dos três perfis                       | ✅ API   |
 | RF2    | Ativar ou inativar um usuário                                      | Passo 5: inativa e reativa um usuário                                         | ✅ API   |
-| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | —                                                                             | ⏳       |
-| RF4    | Gravar a classificação do IMC conforme a tabela                    | —                                                                             | ⏳       |
-| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | —                                                                             | ⏳       |
+| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Passo 7: o professor registra uma avaliação; altura e peso viram IMC          | ✅ API   |
+| RF4    | Gravar a classificação do IMC conforme a tabela                    | Passo 7: a resposta traz a classificação (código e descrição)                 | ✅ API   |
+| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | Passo 8: lista com filtro por aluno, professor e período                      | ✅ API   |
 | RF6    | Autenticar com usuário e senha (administrador, professor ou aluno) | Passo 1: entra como `admin`, `prof.paulo` ou `aluno.ana`; senha errada dá 401 | ✅ API   |
 
 ### Regras de negócio
 
 | Código | O que a especificação pede                                                                    | Como ver                                                                        | Situação |
 | ------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------- |
-| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Passos 3 e 4 cadastram e editam. A exclusão chega junto com as avaliações       | 🔶       |
-| RN2    | Administrador cadastra, edita e exclui avaliações                                             | —                                                                               | ⏳       |
-| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | —                                                                               | ⏳       |
+| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Passos 3 e 4 cadastram e editam; passo 10 exclui (409 se tiver avaliações)      | ✅ API   |
+| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Passo 9: o administrador edita e exclui qualquer avaliação                      | ✅ API   |
+| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Passo 8: o administrador lista as avaliações de qualquer aluno                  | ✅ API   |
 | RN4    | Professor cadastra e edita alunos                                                             | Passo 6: como `prof.paulo`, lista só alunos e cadastra aluno; professor dá 403  | ✅ API   |
-| RN5    | Professor cadastra e edita avaliações                                                         | —                                                                               | ⏳       |
-| RN6    | Professor consulta as avaliações de seus alunos                                               | —                                                                               | ⏳       |
-| RN7    | Aluno consulta apenas as próprias avaliações                                                  | —                                                                               | ⏳       |
+| RN5    | Professor cadastra e edita avaliações                                                         | Passos 7 e 9: o professor registra e edita as suas (403 nas dos colegas)        | ✅ API   |
+| RN6    | Professor consulta as avaliações de seus alunos                                               | Passo 8: o professor lista as avaliações dos alunos                             | ✅ API   |
+| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Passo 8: como `aluno.ana`, só aparecem as dela                                  | ✅ API   |
 | RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403 | ✅ API   |
-| RN9    | Usuário inativo não pode ter novas avaliações                                                 | —                                                                               | ⏳       |
+| RN9    | Usuário inativo não pode ter novas avaliações                                                 | Passo 7: avaliar `aluno.inativo` devolve 422                                    | ✅ API   |
 
 ### Exigências técnicas
 
@@ -68,7 +68,7 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | Versões fixas (sem `^` nem `~`), Node em `engines` e `.nvmrc`, pnpm em `packageManager`        | `pnpm check-versions`, também no CI                               | ✅       |
 | TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                              | ✅       |
 | Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts` | ✅       |
-| Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth` e `usuarios`; as avaliações seguem o mesmo molde   | 🔶       |
+| Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth`, `usuarios` e `avaliacoes`                         | 🔶       |
 | Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`                                                        | ⏳       |
 | Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web`                                                        | ⏳       |
 | Testes e Docker (diferenciais)                                                                 | testes em cada PR (`pnpm test`); Docker a seguir                  | 🔶       |
@@ -104,6 +104,22 @@ PROF=$(pegar_token prof.paulo)
 curl -s $API/usuarios -H "Authorization: Bearer $PROF"
 curl -s -i -X POST $API/usuarios -H "Authorization: Bearer $PROF" -H "$JSON" \
   -d '{"nome":"Outro Prof","usuario":"prof.outro","senha":"senha1234","perfil":"PROFESSOR"}'     # 403
+
+# 7. Registrar uma avaliação (RF3, RF4, RN5, RN9): o professor é o avaliador; o IMC vem calculado
+ANA=$(curl -s "$API/usuarios?busca=ana" -H "Authorization: Bearer $PROF" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).itens[0].id")
+curl -s -X POST $API/avaliacoes -H "Authorization: Bearer $PROF" -H "$JSON" \
+  -d "{\"alunoId\":\"$ANA\",\"dataAvaliacao\":\"2026-11-20\",\"alturaM\":1.75,\"pesoKg\":72}"   # imc 23.5, PESO_NORMAL
+
+# 8. Consultar (RF5, RN3, RN6, RN7): filtros alunoId, professorId, de e ate; o aluno só vê as próprias
+curl -s "$API/avaliacoes?alunoId=$ANA&de=2026-09-01" -H "Authorization: Bearer $TOKEN"
+curl -s $API/avaliacoes -H "Authorization: Bearer $(pegar_token aluno.ana)"
+
+# 9. Editar e excluir (RN2, RN5): troque AV pelo id de uma avaliação; o IMC é recalculado
+curl -s -X PUT $API/avaliacoes/AV -H "Authorization: Bearer $PROF" -H "$JSON" -d '{"pesoKg":90}'
+curl -s -i -X DELETE $API/avaliacoes/AV -H "Authorization: Bearer $TOKEN"                              # 204; professor leva 403
+
+# 10. Excluir usuário (RN1): só sem avaliações
+curl -s -i -X DELETE $API/usuarios/$ANA -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
 ```
 
 Todo erro volta no formato `application/problem+json` (RFC 9457), com `status`, `codigo` e, nos erros de validação, a lista de `campos`.

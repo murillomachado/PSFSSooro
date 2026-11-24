@@ -8,6 +8,7 @@ export interface DependenciasDoApp {
   readonly autenticar: RequestHandler
   readonly rotasDeAuth: Router
   readonly rotasDeUsuarios: Router
+  readonly rotasDeAvaliacoes: Router
   readonly registrarErro: (erro: unknown) => void
 }
 
@@ -23,6 +24,8 @@ export function criarApp(dependencias: DependenciasDoApp): Express {
   })
   app.use('/api/auth', dependencias.rotasDeAuth)
   app.use('/api/usuarios', dependencias.autenticar, dependencias.rotasDeUsuarios)
+
+  app.use('/api/avaliacoes', dependencias.autenticar, dependencias.rotasDeAvaliacoes)
 
   app.use(rotaNaoEncontrada)
   app.use(criarTratadorDeErros(dependencias.registrarErro))

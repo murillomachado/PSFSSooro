@@ -25,5 +25,6 @@ export function criarRotasDeUsuarios(controller: UsuariosController): Router {
     validar({ parametros: idSchema, corpo: situacaoSchema }),
     controller.alterarSituacao,
   )
+  rotas.delete('/:id', autorizar('ADMINISTRADOR'), validar({ parametros: idSchema }), controller.excluir)
   return rotas
 }

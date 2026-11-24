@@ -15,6 +15,15 @@ export class MemoriaUsuarioRepository implements UsuarioRepository {
     return Promise.resolve([...this.usuarios.values()].find((candidato) => candidato.usuario === usuario))
   }
 
+  buscarPorIds(ids: readonly string[]): Promise<Usuario[]> {
+    return Promise.resolve(ids.flatMap((id) => this.usuarios.get(id) ?? []))
+  }
+
+  excluir(id: string): Promise<void> {
+    this.usuarios.delete(id)
+    return Promise.resolve()
+  }
+
   listar(filtros: FiltrosDeUsuario): Promise<PaginaDe<Usuario>> {
     const busca = filtros.busca?.toLowerCase() ?? ''
     const filtrados = [...this.usuarios.values()]

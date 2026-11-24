@@ -6,9 +6,17 @@ import { AutenticarUsuario } from './modules/auth/application/autenticar-usuario
 import { ObterSessao } from './modules/auth/application/obter-sessao.ts'
 import { AuthController } from './modules/auth/http/auth.controller.ts'
 import { criarRotasDeAuth } from './modules/auth/http/auth.routes.ts'
+import { ListarAvaliacoes, ObterAvaliacao } from './modules/avaliacoes/application/consultar-avaliacoes.ts'
+import { EditarAvaliacao } from './modules/avaliacoes/application/editar-avaliacao.ts'
+import { ExcluirAvaliacao } from './modules/avaliacoes/application/excluir-avaliacao.ts'
+import { RegistrarAvaliacao } from './modules/avaliacoes/application/registrar-avaliacao.ts'
+import { AvaliacoesController } from './modules/avaliacoes/http/avaliacoes.controller.ts'
+import { criarRotasDeAvaliacoes } from './modules/avaliacoes/http/avaliacoes.routes.ts'
+import { TypeOrmAvaliacaoRepository } from './modules/avaliacoes/infra/typeorm-avaliacao.repository.ts'
 import { AlterarSituacao } from './modules/usuarios/application/alterar-situacao.ts'
 import { CriarUsuario } from './modules/usuarios/application/criar-usuario.ts'
 import { EditarUsuario } from './modules/usuarios/application/editar-usuario.ts'
+import { ExcluirUsuario } from './modules/usuarios/application/excluir-usuario.ts'
 import { ListarUsuarios } from './modules/usuarios/application/listar-usuarios.ts'
 import { ObterUsuario } from './modules/usuarios/application/obter-usuario.ts'
 import { UsuariosController } from './modules/usuarios/http/usuarios.controller.ts'
@@ -28,6 +36,8 @@ export function montarApp(env: Env, banco: DataSource): Express {
   const hasher = new HasherScrypt()
   const tokens = new TokenJwt(env.segredoJwt, env.expiracaoDoTokenEmSegundos)
   const usuarios = new TypeOrmUsuarioRepository(banco)
+  const avaliacoes = new TypeOrmAvaliacaoRepository(banco)
+  const vinculos = { possuiAvaliacoes: (id: string) => avaliacoes.usuarioPossuiAvaliacoes(id) }
 
   const provedorDeAtor: ProvedorDeAtor = {
     buscarAtor: async (usuarioId) => {
@@ -42,8 +52,16 @@ export function montarApp(env: Env, banco: DataSource): Express {
     listar: new ListarUsuarios(usuarios),
     obter: new ObterUsuario(usuarios),
     criar: new CriarUsuario(usuarios, hasher, relogioDoSistema, randomUUID),
-    editar: new EditarUsuario(usuarios, hasher, relogioDoSistema),
+    editar: new EditarUsuario(usuarios, hasher, relogioDoSistema, vinculos),
     alterarSituacao: new AlterarSituacao(usuarios, relogioDoSistema),
+    excluir: new ExcluirUsuario(usuarios, vinculos),
+  })
+  const avaliacoesController = new AvaliacoesController({
+    listar: new ListarAvaliacoes(avaliacoes, usuarios),
+    obter: new ObterAvaliacao(avaliacoes, usuarios),
+    registrar: new RegistrarAvaliacao(avaliacoes, usuarios, relogioDoSistema, randomUUID),
+    editar: new EditarAvaliacao(avaliacoes, usuarios, relogioDoSistema),
+    excluir: new ExcluirAvaliacao(avaliacoes),
   })
 
   return criarApp({
@@ -51,6 +69,7 @@ export function montarApp(env: Env, banco: DataSource): Express {
     autenticar: autenticarRequisicao,
     rotasDeAuth: criarRotasDeAuth(authController, autenticarRequisicao),
     rotasDeUsuarios: criarRotasDeUsuarios(usuariosController),
+    rotasDeAvaliacoes: criarRotasDeAvaliacoes(avaliacoesController),
     registrarErro: (erro) => {
       console.error(erro)
     },
