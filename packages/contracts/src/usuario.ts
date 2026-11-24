@@ -1,41 +1,55 @@
 import { z } from 'zod'
 import { paginaSchema, paginacaoQuerySchema } from './paginacao.ts'
+import { CORPO_JSON } from './erro.ts'
 import { perfilSchema } from './perfil.ts'
 
-const nome = z.string().trim().min(2, 'Informe o nome (mínimo de 2 caracteres)').max(100, 'O nome é longo demais')
+const nome = z
+  .string('Informe o nome')
+  .trim()
+  .min(2, 'Informe o nome (mínimo de 2 caracteres)')
+  .max(100, 'O nome é longo demais')
 
 const usuario = z
-  .string()
+  .string('Informe o usuário')
   .trim()
   .toLowerCase()
   .regex(/^[a-z0-9._-]{3,30}$/, 'Use de 3 a 30 caracteres: letras, números, ponto, hífen ou sublinhado')
 
-const senha = z.string().min(8, 'A senha precisa ter pelo menos 8 caracteres').max(128, 'A senha é longa demais')
+const senha = z
+  .string('Informe a senha')
+  .min(8, 'A senha precisa ter pelo menos 8 caracteres')
+  .max(128, 'A senha é longa demais')
 
-const booleanoDeTexto = z.enum(['true', 'false']).transform((texto) => texto === 'true')
+const booleanoDeTexto = z.enum(['true', 'false'], 'Use true ou false').transform((texto) => texto === 'true')
 
-export const loginSchema = z.object({
-  usuario: z.string().trim().toLowerCase().min(1, 'Informe o usuário'),
-  senha: z.string().min(1, 'Informe a senha'),
-})
+export const loginSchema = z.object(
+  {
+    usuario: z.string('Informe o usuário').trim().toLowerCase().min(1, 'Informe o usuário'),
+    senha: z.string('Informe a senha').min(1, 'Informe a senha'),
+  },
+  CORPO_JSON,
+)
 
-export const criarUsuarioSchema = z.object({ nome, usuario, senha, perfil: perfilSchema })
+export const criarUsuarioSchema = z.object({ nome, usuario, senha, perfil: perfilSchema }, CORPO_JSON)
 
-export const editarUsuarioSchema = z.object({
-  nome: nome.optional(),
-  usuario: usuario.optional(),
-  senha: senha.optional(),
-  perfil: perfilSchema.optional(),
-})
+export const editarUsuarioSchema = z.object(
+  {
+    nome: nome.optional(),
+    usuario: usuario.optional(),
+    senha: senha.optional(),
+    perfil: perfilSchema.optional(),
+  },
+  CORPO_JSON,
+)
 
-export const situacaoSchema = z.object({ ativo: z.boolean('Informe se o usuário está ativo') })
+export const situacaoSchema = z.object({ ativo: z.boolean('Informe se o usuário está ativo') }, CORPO_JSON)
 
 export const idSchema = z.object({ id: z.uuid('Identificador inválido') })
 
 export const listarUsuariosQuerySchema = paginacaoQuerySchema.extend({
   perfil: perfilSchema.optional(),
   ativo: booleanoDeTexto.optional(),
-  busca: z.string().trim().max(100, 'A busca é longa demais').optional(),
+  busca: z.string('A busca precisa ser um texto').trim().max(100, 'A busca é longa demais').optional(),
 })
 
 export const usuarioRespostaSchema = z.object({

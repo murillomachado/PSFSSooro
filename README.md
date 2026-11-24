@@ -14,7 +14,7 @@ Com o Docker instalado (Docker Desktop, ou Docker Engine com o Compose v2) e as 
 docker compose up --build
 ```
 
-O primeiro build leva de um a dois minutos. Quando as linhas de `web-1` mostrarem `Ready`, abra **http://localhost:3000** e entre com um dos [usuários de demonstração](#usuários-de-demonstração) (a API fica em http://localhost:3333). O banco fica no volume `banco` e sobrevive a reinícios; `docker compose down -v` para tudo e apaga o banco. O `JWT_SECRET` do compose é de demonstração.
+O primeiro build leva de um a dois minutos. Quando as linhas de `web-1` mostrarem `Ready`, abra **http://localhost:3000** e entre com um dos [usuários de demonstração](#usuários-de-demonstração) (a API fica em http://localhost:3333, com a [documentação](#documentação-da-api-openapi) em http://localhost:3333/api/docs). O banco fica no volume `banco` e sobrevive a reinícios; `docker compose down -v` para tudo e apaga o banco. O `JWT_SECRET` do compose é de demonstração.
 
 ### Sem Docker
 
@@ -25,7 +25,7 @@ pnpm install                                  # dependências, hooks do Git e bu
 cp apps/api/.env.example apps/api/.env        # variáveis de ambiente da API (já funcionam como estão)
 pnpm --filter @psfssooro/api db:migrate       # cria o banco SQLite com as migrations
 pnpm --filter @psfssooro/api db:seed          # cria os usuários de demonstração (pode rodar de novo)
-pnpm --filter @psfssooro/api dev              # API em http://localhost:3333
+pnpm --filter @psfssooro/api dev              # API em http://localhost:3333 (documentação em /api/docs)
 ```
 
 Em outro terminal, na mesma pasta, a Web, que abre em http://localhost:3000. Ela fala com a API em `NEXT_PUBLIC_API_URL`, que já vale `http://localhost:3333/api` sem configuração; para mudar, copie `apps/web/.env.example` para `apps/web/.env.local`. O servidor da Web também consulta a API para conferir a sessão antes de cada página; o endereço que ele usa é o mesmo, salvo se `API_URL_INTERNA` disser outro:
@@ -102,6 +102,12 @@ Não é pedido pela especificação; ajuda a cumprir o objetivo dela, acompanhar
 
 As faixas desenhadas no fundo vêm da API (`GET /api/avaliacoes/faixas`), da mesma tabela que classifica as avaliações: uma faixa nova continua sendo uma linha só no código.
 
+## Documentação da API (OpenAPI)
+
+Com a API no ar (pelo Docker ou sem ele), a documentação navegável fica em **http://localhost:3333/api/docs**. É uma página Swagger UI com todas as rotas, os perfis que podem chamar cada uma, o formato das requisições e respostas e os erros possíveis. O documento OpenAPI 3.1 em si está em http://localhost:3333/api/docs/openapi.json.
+
+Ele é gerado a partir dos mesmos schemas zod que validam as requisições (`packages/contracts`), então acompanha qualquer mudança neles. Para chamar as rotas protegidas pela própria página: abra **POST /api/auth/login**, clique em **Try it out**, envie `{"usuario":"michael.scott","senha":"senha1234"}`, copie o `token` da resposta e cole em **Authorize**.
+
 ## Testando a API
 
 Estes passos exercitam os mesmos requisitos direto na API, com `curl`, em um terminal bash (Linux, macOS, WSL ou Git Bash). Precisam do `curl` e do Node.js (usado só para ler o JSON das respostas). Com a API no ar (veja [Como executar](#como-executar)), rode os comandos na ordem, no mesmo terminal:
@@ -156,7 +162,7 @@ for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code} " -X POST $API/auth
 curl -s -i -X POST $API/auth/login -H "$JSON" -d '{"usuario":"stanley.hudson","senha":"senha1234"}'   # 429, com Retry-After
 ```
 
-Todo erro volta no formato `application/problem+json` (RFC 9457), com `status`, `codigo` e, nos erros de validação, a lista de `campos`.
+Todo erro volta no formato `application/problem+json` (RFC 9457): `type` (`about:blank`), `title`, `status` e `detail`, mais o `codigo`, que identifica o erro (por exemplo, `USUARIO_JA_EXISTE`), e, nos erros de validação, a lista de `campos` com uma mensagem em português para cada um. O 401 traz também o cabeçalho `WWW-Authenticate: Bearer`.
 
 ## Segurança
 
