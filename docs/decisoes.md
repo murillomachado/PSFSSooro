@@ -21,6 +21,8 @@ Onde a especificação deixa margem, a interpretação adotada. Cada linha diz o
 
 A API responde **404** para o que o perfil não pode ver e **403** para o que ele vê mas não pode mudar.
 
+Os erros seguem o RFC 9457. Como não há uma página de documentação para cada tipo de erro, o `type` é `about:blank` (o valor que o RFC define para esse caso), e o que distingue um erro do outro é a extensão `codigo`. Toda mensagem de validação é em português: cada campo tem a sua, e o idioma português do zod cobre o resto.
+
 ## Decisões técnicas
 
 Cada uma foi testada num protótipo antes de entrar no projeto.

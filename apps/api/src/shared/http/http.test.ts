@@ -61,6 +61,8 @@ describe('autenticar', () => {
       request(app).get('/professor').set(AUTORIZACAO, 'Basic abc'),
     ])
     expect(respostas.map((resposta) => resposta.status)).toEqual([401, 401, 401])
+    // RFC 9110: toda resposta 401 diz como se autenticar.
+    expect(respostas.map((resposta) => resposta.headers['www-authenticate'])).toEqual(['Bearer', 'Bearer', 'Bearer'])
   })
 
   it('deixa passar com um token válido', async () => {
@@ -95,11 +97,11 @@ describe('validar', () => {
 })
 
 describe('tratamento de erros', () => {
-  it('traduz um erro de domínio para problem+json com o status e o código dele', async () => {
+  it('traduz um erro de domínio para problem+json com o status e o código dele (RFC 9457)', async () => {
     const resposta = await request(app).get('/conflito').expect(409)
     expect(resposta.headers['content-type']).toMatch(PROBLEM_JSON)
     expect(resposta.body).toEqual({
-      type: '/erros/ja-existe',
+      type: 'about:blank',
       title: 'Conflito',
       status: 409,
       detail: 'Já existe.',

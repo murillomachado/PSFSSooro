@@ -109,6 +109,17 @@ describe('API de usuários: permissões por perfil', () => {
       expect(problema(naoPermitido).codigo).toBe('PERFIL_NAO_PERMITIDO')
     })
 
+    it('um cadastro sem campos responde 400 com a mensagem de cada campo, em português', async () => {
+      const resposta = await admin.post(URL_USUARIOS).send({})
+      expect(resposta.status).toBe(400)
+      expect(problema(resposta).campos).toEqual([
+        { campo: 'nome', mensagem: 'Informe o nome' },
+        { campo: 'usuario', mensagem: 'Informe o usuário' },
+        { campo: 'senha', mensagem: 'Informe a senha' },
+        { campo: 'perfil', mensagem: 'Escolha o perfil: ADMINISTRADOR, PROFESSOR ou ALUNO' },
+      ])
+    })
+
     it('o aluno não cadastra ninguém', async () => {
       expect((await aluno.post(URL_USUARIOS).send({ ...NOVO_ALUNO, usuario: 'aluno.y' })).status).toBe(403)
     })

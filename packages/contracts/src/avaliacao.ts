@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { paginaSchema, paginacaoQuerySchema } from './paginacao.ts'
+import { CORPO_JSON } from './erro.ts'
 
 /** Os valores chegam com no máximo duas casas decimais (1,75 m; 72,40 kg). */
 const temAteDuasCasas = (valor: number): boolean => Math.abs(valor * 100 - Math.round(valor * 100)) < 1e-6
@@ -19,22 +20,28 @@ const pesoKg = z
 const dia = z.iso.date('Informe uma data válida (AAAA-MM-DD)')
 
 /** O IMC e a classificação nunca vêm do cliente: a API calcula. */
-export const criarAvaliacaoSchema = z.object({
-  alunoId: z.uuid('Escolha o aluno'),
-  /** Só o administrador informa. Para o professor, o avaliador é ele mesmo. */
-  professorId: z.uuid('Escolha o professor').optional(),
-  dataAvaliacao: dia,
-  alturaM,
-  pesoKg,
-})
+export const criarAvaliacaoSchema = z.object(
+  {
+    alunoId: z.uuid('Escolha o aluno'),
+    /** Só o administrador informa. Para o professor, o avaliador é ele mesmo. */
+    professorId: z.uuid('Escolha o professor').optional(),
+    dataAvaliacao: dia,
+    alturaM,
+    pesoKg,
+  },
+  CORPO_JSON,
+)
 
-export const editarAvaliacaoSchema = z.object({
-  alunoId: z.uuid('Escolha o aluno').optional(),
-  professorId: z.uuid('Escolha o professor').optional(),
-  dataAvaliacao: dia.optional(),
-  alturaM: alturaM.optional(),
-  pesoKg: pesoKg.optional(),
-})
+export const editarAvaliacaoSchema = z.object(
+  {
+    alunoId: z.uuid('Escolha o aluno').optional(),
+    professorId: z.uuid('Escolha o professor').optional(),
+    dataAvaliacao: dia.optional(),
+    alturaM: alturaM.optional(),
+    pesoKg: pesoKg.optional(),
+  },
+  CORPO_JSON,
+)
 
 export const listarAvaliacoesQuerySchema = paginacaoQuerySchema.extend({
   alunoId: z.uuid('Identificador do aluno inválido').optional(),

@@ -83,3 +83,24 @@ describe('listarUsuariosQuerySchema', () => {
     expect(listarUsuariosQuerySchema.safeParse(query).success).toBe(false)
   })
 })
+
+describe('mensagens de campos ausentes', () => {
+  const mensagens = (resultado: { error?: { issues: { message: string }[] } }) =>
+    resultado.error?.issues.map((problema) => problema.message)
+
+  it('cada campo obrigatório que falta tem a própria mensagem, em português', () => {
+    expect(mensagens(criarUsuarioSchema.safeParse({}))).toEqual([
+      'Informe o nome',
+      'Informe o usuário',
+      'Informe a senha',
+      'Escolha o perfil: ADMINISTRADOR, PROFESSOR ou ALUNO',
+    ])
+    expect(mensagens(loginSchema.safeParse({}))).toEqual(['Informe o usuário', 'Informe a senha'])
+    expect(mensagens(situacaoSchema.safeParse({}))).toEqual(['Informe se o usuário está ativo'])
+  })
+
+  it('o corpo que não é um objeto JSON também é avisado em português', () => {
+    expect(mensagens(criarUsuarioSchema.safeParse(undefined))).toEqual(['Envie os dados em JSON'])
+    expect(mensagens(loginSchema.safeParse('texto'))).toEqual(['Envie os dados em JSON'])
+  })
+})
