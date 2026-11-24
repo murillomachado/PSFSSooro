@@ -1,0 +1,97 @@
+# Quality gates. O job quality-gates-ok agrega o resultado e é o único check obrigatório da main.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    # `edited`: o título da PR vira o commit da main no squash, então editá-lo roda o CI de novo.
+    types: [opened, synchronize, reopened, edited]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # Os hooks do Git são da máquina de quem desenvolve; no CI os gates rodam como passos.
+  HUSKY: '0'
+
+jobs:
+  qualidade:
+    name: Qualidade
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/preparar-ambiente
+      # Cada passo roda mesmo se um anterior falhar, para todos os problemas aparecerem de uma vez.
+      - name: Versões fixas
+        run: pnpm check-versions
+      - name: Tipos
+        if: ${{ !cancelled() }}
+        run: pnpm typecheck
+      - name: Lint
+        if: ${{ !cancelled() }}
+        run: pnpm lint
+      - name: Formatação
+        if: ${{ !cancelled() }}
+        run: pnpm format:check
+      - name: Duplicação
+        if: ${{ !cancelled() }}
+        run: pnpm dup
+      - name: Testes e cobertura
+        if: ${{ !cancelled() }}
+        run: pnpm test:coverage
+      - name: Build
+        if: ${{ !cancelled() }}
+        run: pnpm build
+      - name: Dependências vulneráveis
+        if: ${{ !cancelled() }}
+        run: pnpm audit --audit-level high
+
+  commits:
+    name: Conventional Commits
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/preparar-ambiente
+      # Dados do evento entram por variável de ambiente, nunca interpolados no shell:
+      # o título é texto livre de quem abre a PR e poderia injetar comandos.
+      # O squash grava "<título> (#N)": o título é validado já com o sufixo.
+      - name: Título da PR (vira o commit da main no squash)
+        if: github.event_name == 'pull_request'
+        env:
+          TITULO: ${{ github.event.pull_request.title }}
+          NUMERO: ${{ github.event.pull_request.number }}
+        run: printf '%s (#%s)\n' "$TITULO" "$NUMERO" | pnpm exec commitlint --verbose
+      - name: Commits da PR
+        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        env:
+          DE: ${{ github.event.pull_request.base.sha }}
+          ATE: ${{ github.event.pull_request.head.sha }}
+        run: pnpm exec commitlint --from "$DE" --to "$ATE" --verbose
+      # Com squash e a main protegida, cada push é um commit só.
+      - name: Commit recebido pela main
+        if: github.event_name == 'push'
+        run: pnpm exec commitlint --last --verbose
+
+  quality-gates-ok:
+    name: quality-gates-ok
+    if: always()
+    needs: [qualidade, commits]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Todos os gates passaram?
+        env:
+          RESULTADOS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Resultados dos gates: $RESULTADOS"
+          for r in $RESULTADOS; do [ "$r" = "success" ] || exit 1; done

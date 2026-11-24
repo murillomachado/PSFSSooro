@@ -1,0 +1,31 @@
+name: Preparar ambiente
+description: Node do .nvmrc, pnpm da versão do packageManager e dependências com o lockfile congelado.
+
+runs:
+  using: composite
+  steps:
+    - name: Node do .nvmrc
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+      with:
+        node-version-file: .nvmrc
+
+    - name: pnpm da versão do packageManager
+      shell: bash
+      # O Node 26 não traz mais o Corepack. A versão sai do package.json, a única fonte dela.
+      run: npm install --global "$(node -p "require('./package.json').packageManager.split('+')[0]")"
+
+    - name: Localizar o store do pnpm
+      id: store
+      shell: bash
+      run: echo "caminho=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    - name: Cache do store do pnpm
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.store.outputs.caminho }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-store-${{ runner.os }}-
+
+    - name: Instalar dependências
+      shell: bash
+      run: pnpm install --frozen-lockfile
