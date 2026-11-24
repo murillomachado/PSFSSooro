@@ -141,13 +141,13 @@ describe('ListaDeAvaliacoes (RF5, RN2, RN3, RN5, RN6, RN7)', () => {
     })
   })
 
-  it('o aluno vê o gráfico da própria evolução, com o IMC atual e a variação desde a primeira avaliação', async () => {
+  it('o aluno vê o gráfico da própria evolução, com o IMC e o peso atuais e a variação desde a primeira avaliação', async () => {
     renderizar(<ListaDeAvaliacoes ator={ALUNO} />)
     expect(await screen.findByRole('heading', { name: 'Evolução do IMC' })).toBeDefined()
     expect(listarAvaliacoes).toHaveBeenCalledWith({ pagina: 1, limite: 100, alunoId: ALUNO.id })
     expect(screen.getByText('IMC atual')).toBeDefined()
     expect(screen.getByText('+1,8')).toBeDefined()
-    expect(screen.getByText('desde 14/09/2026')).toBeDefined()
+    expect(screen.getAllByText(/desde 14\/09/)).toHaveLength(2)
   })
 
   it('para o administrador, o gráfico aparece quando a lista é filtrada por um aluno', async () => {
