@@ -1,4 +1,5 @@
 import { Button, Flex, Text } from '@chakra-ui/react'
+import { LuChevronLeft, LuChevronRight } from 'react-icons/lu'
 
 interface PaginacaoProps {
   readonly pagina: number
@@ -11,8 +12,8 @@ interface PaginacaoProps {
 export function Paginacao({ pagina, limite, total, aoMudar }: Readonly<PaginacaoProps>) {
   const totalDePaginas = Math.max(1, Math.ceil(total / limite))
   return (
-    <Flex align="center" justify="space-between" mt="4">
-      <Text color="fg.muted">
+    <Flex align="center" justify="space-between" gap="3" mt="4" wrap="wrap">
+      <Text color="fg.muted" fontSize="sm">
         Página {pagina} de {totalDePaginas} · {total} no total
       </Text>
       <Flex gap="2">
@@ -24,6 +25,7 @@ export function Paginacao({ pagina, limite, total, aoMudar }: Readonly<Paginacao
             aoMudar(pagina - 1)
           }}
         >
+          <LuChevronLeft />
           Anterior
         </Button>
         <Button
@@ -35,6 +37,7 @@ export function Paginacao({ pagina, limite, total, aoMudar }: Readonly<Paginacao
           }}
         >
           Próxima
+          <LuChevronRight />
         </Button>
       </Flex>
     </Flex>

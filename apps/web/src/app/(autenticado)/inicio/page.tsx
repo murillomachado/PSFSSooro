@@ -1,14 +1,21 @@
 'use client'
 
-import { Heading, Text } from '@chakra-ui/react'
+import { CabecalhoDePagina } from '@/components/ui/CabecalhoDePagina.tsx'
+import { Carregando } from '@/components/ui/Carregando.tsx'
 import { useSessao } from '@/features/auth/hooks/useSessao.ts'
+import { PainelInicial } from '@/features/inicio/components/PainelInicial.tsx'
+import { NOME_DO_PERFIL } from '@/features/usuarios/perfis.ts'
 
 export default function PaginaInicial() {
   const { usuario } = useSessao()
+  if (usuario === undefined) return <Carregando />
   return (
     <>
-      <Heading size="lg">Olá, {usuario?.nome}</Heading>
-      <Text color="fg.muted">Você entrou como {usuario?.perfil.toLowerCase()}.</Text>
+      <CabecalhoDePagina
+        titulo={`Olá, ${usuario.nome}`}
+        descricao={`Você entrou como ${NOME_DO_PERFIL[usuario.perfil].toLowerCase()}.`}
+      />
+      <PainelInicial usuario={usuario} />
     </>
   )
 }

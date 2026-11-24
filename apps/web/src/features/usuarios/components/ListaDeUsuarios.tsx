@@ -2,6 +2,7 @@
 
 import type { Perfil, UsuarioResposta } from '@psfssooro/contracts'
 import { useCallback, useState } from 'react'
+import { avisarSucesso } from '@/components/ui/Avisos.tsx'
 import { Carregando } from '@/components/ui/Carregando.tsx'
 import { DialogoDeConfirmacao } from '@/components/ui/DialogoDeConfirmacao.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
@@ -32,6 +33,9 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
     exclusao.reset()
     situacao.reset()
     exclusao.mutate(paraExcluir.id, {
+      onSuccess: () => {
+        avisarSucesso('Usuário excluído')
+      },
       onSettled: () => {
         definirParaExcluir(undefined)
       },
@@ -57,7 +61,14 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
             perfilDoAtor={perfilDoAtor}
             aoAlterarSituacao={(usuario) => {
               exclusao.reset()
-              situacao.mutate({ id: usuario.id, ativo: !usuario.ativo })
+              situacao.mutate(
+                { id: usuario.id, ativo: !usuario.ativo },
+                {
+                  onSuccess: () => {
+                    avisarSucesso(usuario.ativo ? `${usuario.nome} foi inativado` : `${usuario.nome} foi ativado`)
+                  },
+                },
+              )
             }}
             aoExcluir={definirParaExcluir}
           />

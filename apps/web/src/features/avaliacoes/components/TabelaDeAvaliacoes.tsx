@@ -1,8 +1,9 @@
 'use client'
 
 import type { AvaliacaoResposta } from '@psfssooro/contracts'
-import { Badge, Button, Flex, Table, Text } from '@chakra-ui/react'
-import Link from 'next/link'
+import { Badge } from '@chakra-ui/react'
+import { BotaoDeEditar, BotaoDeExcluir } from '@/components/ui/AcoesDaLinha.tsx'
+import { type Coluna, TabelaResponsiva } from '@/components/ui/TabelaResponsiva.tsx'
 import { corDaFaixa, formatarAltura, formatarData, formatarImc, formatarPeso } from '../apresentacao.ts'
 import type { Ator } from '../ator.ts'
 
@@ -16,58 +17,45 @@ interface TabelaDeAvaliacoesProps {
 const podeEditar = (ator: Ator, a: AvaliacaoResposta): boolean =>
   ator.perfil === 'ADMINISTRADOR' || (ator.perfil === 'PROFESSOR' && a.professor.id === ator.id)
 
+const COLUNAS: readonly Coluna<AvaliacaoResposta>[] = [
+  { titulo: 'Data', valor: (a) => formatarData(a.dataAvaliacao) },
+  { titulo: 'Aluno', valor: (a) => a.aluno.nome },
+  { titulo: 'Professor', valor: (a) => a.professor.nome },
+  { titulo: 'Altura', valor: (a) => formatarAltura(a.alturaM), numerica: true },
+  { titulo: 'Peso', valor: (a) => formatarPeso(a.pesoKg), numerica: true },
+  { titulo: 'IMC', valor: (a) => formatarImc(a.imc), numerica: true },
+  {
+    titulo: 'Classificação',
+    valor: (a) => (
+      <Badge colorPalette={corDaFaixa(a.classificacao.codigo)} variant="subtle">
+        {a.classificacao.descricao}
+      </Badge>
+    ),
+  },
+]
+
 export function TabelaDeAvaliacoes({ avaliacoes, ator, aoExcluir }: Readonly<TabelaDeAvaliacoesProps>) {
-  if (avaliacoes.length === 0) return <Text color="fg.muted">Nenhuma avaliação encontrada.</Text>
+  const temAcoes = ator.perfil !== 'ALUNO'
   return (
-    <Table.Root>
-      <Table.Header>
-        <Table.Row>
-          <Table.ColumnHeader>Data</Table.ColumnHeader>
-          <Table.ColumnHeader>Aluno</Table.ColumnHeader>
-          <Table.ColumnHeader>Professor</Table.ColumnHeader>
-          <Table.ColumnHeader>Altura</Table.ColumnHeader>
-          <Table.ColumnHeader>Peso</Table.ColumnHeader>
-          <Table.ColumnHeader>IMC</Table.ColumnHeader>
-          <Table.ColumnHeader>Classificação</Table.ColumnHeader>
-          <Table.ColumnHeader>Ações</Table.ColumnHeader>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {avaliacoes.map((a) => (
-          <Table.Row key={a.id}>
-            <Table.Cell>{formatarData(a.dataAvaliacao)}</Table.Cell>
-            <Table.Cell>{a.aluno.nome}</Table.Cell>
-            <Table.Cell>{a.professor.nome}</Table.Cell>
-            <Table.Cell>{formatarAltura(a.alturaM)}</Table.Cell>
-            <Table.Cell>{formatarPeso(a.pesoKg)}</Table.Cell>
-            <Table.Cell>{formatarImc(a.imc)}</Table.Cell>
-            <Table.Cell>
-              <Badge colorPalette={corDaFaixa(a.classificacao.codigo)}>{a.classificacao.descricao}</Badge>
-            </Table.Cell>
-            <Table.Cell>
-              <Flex gap="2">
-                {podeEditar(ator, a) && (
-                  <Button asChild size="xs" variant="outline">
-                    <Link href={`/avaliacoes/${a.id}/editar`}>Editar</Link>
-                  </Button>
-                )}
-                {ator.perfil === 'ADMINISTRADOR' && (
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    colorPalette="red"
-                    onClick={() => {
-                      aoExcluir(a)
-                    }}
-                  >
-                    Excluir
-                  </Button>
-                )}
-              </Flex>
-            </Table.Cell>
-          </Table.Row>
-        ))}
-      </Table.Body>
-    </Table.Root>
+    <TabelaResponsiva
+      itens={avaliacoes}
+      colunas={COLUNAS}
+      chave={(a) => a.id}
+      vazio="Nenhuma avaliação encontrada."
+      {...(temAcoes && {
+        acoes: (a: AvaliacaoResposta) => (
+          <>
+            {podeEditar(ator, a) && <BotaoDeEditar href={`/avaliacoes/${a.id}/editar`} />}
+            {ator.perfil === 'ADMINISTRADOR' && (
+              <BotaoDeExcluir
+                aoClicar={() => {
+                  aoExcluir(a)
+                }}
+              />
+            )}
+          </>
+        ),
+      })}
+    />
   )
 }

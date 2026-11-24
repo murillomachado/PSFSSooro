@@ -1,7 +1,8 @@
 'use client'
 
-import { Heading } from '@chakra-ui/react'
 import { useRouter } from 'next/navigation'
+import { avisarSucesso } from '@/components/ui/Avisos.tsx'
+import { PainelDeFormulario } from '@/components/ui/PainelDeFormulario.tsx'
 import { RotaDePerfil } from '@/components/ui/RotaDePerfil.tsx'
 import { useSessao } from '@/features/auth/hooks/useSessao.ts'
 import { FormularioComOpcoes } from '@/features/avaliacoes/components/FormularioComOpcoes.tsx'
@@ -15,23 +16,27 @@ export default function PaginaDeNovaAvaliacao() {
 
   return (
     <RotaDePerfil perfis={['ADMINISTRADOR', 'PROFESSOR']}>
-      <Heading size="lg" mb="4">
-        Nova avaliação
-      </Heading>
-      {usuario !== undefined && (
-        <FormularioComOpcoes
-          perfilDoAtor={usuario.perfil}
-          enviando={isPending}
-          erro={error === null ? undefined : mensagemDeErro(error)}
-          aoEnviar={(dados) => {
-            mutate(dados, {
-              onSuccess: () => {
-                roteador.push('/avaliacoes')
-              },
-            })
-          }}
-        />
-      )}
+      <PainelDeFormulario
+        titulo="Nova avaliação"
+        descricao="Informe altura e peso: o IMC e a classificação são calculados na hora."
+        voltarPara="/avaliacoes"
+      >
+        {usuario !== undefined && (
+          <FormularioComOpcoes
+            perfilDoAtor={usuario.perfil}
+            enviando={isPending}
+            erro={error === null ? undefined : mensagemDeErro(error)}
+            aoEnviar={(dados) => {
+              mutate(dados, {
+                onSuccess: () => {
+                  avisarSucesso('Avaliação registrada')
+                  roteador.push('/avaliacoes')
+                },
+              })
+            }}
+          />
+        )}
+      </PainelDeFormulario>
     </RotaDePerfil>
   )
 }

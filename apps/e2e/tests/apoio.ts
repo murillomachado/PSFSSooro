@@ -14,7 +14,8 @@ export async function entrarComSucesso(pagina: Page, usuario: string): Promise<v
 }
 
 export async function sair(pagina: Page): Promise<void> {
-  await pagina.getByRole('button', { name: 'Sair' }).click()
+  await pagina.getByRole('button', { name: 'Menu do usuário' }).click()
+  await pagina.getByRole('menuitem', { name: 'Sair' }).click()
   await expect(pagina).toHaveURL(/\/login$/)
 }
 

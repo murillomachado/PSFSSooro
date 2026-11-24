@@ -1,4 +1,5 @@
-import { Button, Dialog, Portal } from '@chakra-ui/react'
+import { Button, Dialog, Flex, Icon, Portal } from '@chakra-ui/react'
+import { LuTriangleAlert } from 'react-icons/lu'
 
 interface DialogoDeConfirmacaoProps {
   readonly aberto: boolean
@@ -25,9 +26,12 @@ export function DialogoDeConfirmacao(props: Readonly<DialogoDeConfirmacaoProps>)
         <Dialog.Positioner>
           <Dialog.Content>
             <Dialog.Header>
-              <Dialog.Title>{props.titulo}</Dialog.Title>
+              <Flex align="center" gap="3">
+                <Icon as={LuTriangleAlert} color="red.solid" boxSize="5" />
+                <Dialog.Title>{props.titulo}</Dialog.Title>
+              </Flex>
             </Dialog.Header>
-            <Dialog.Body>{props.mensagem}</Dialog.Body>
+            <Dialog.Body color="fg.muted">{props.mensagem}</Dialog.Body>
             <Dialog.Footer>
               <Button variant="outline" onClick={props.aoCancelar}>
                 Cancelar

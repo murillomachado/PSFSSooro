@@ -1,14 +1,15 @@
-import { ChakraProvider, defaultSystem } from '@chakra-ui/react'
+import { ChakraProvider } from '@chakra-ui/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render } from '@testing-library/react'
 import type { ReactElement } from 'react'
+import { sistema } from '@/theme/sistema.ts'
 
 /** Monta um componente com os mesmos provedores do app (Chakra e TanStack Query). */
 export function renderizar(elemento: ReactElement) {
   const cliente = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={cliente}>
-      <ChakraProvider value={defaultSystem}>{elemento}</ChakraProvider>
+      <ChakraProvider value={sistema}>{elemento}</ChakraProvider>
     </QueryClientProvider>,
   )
 }

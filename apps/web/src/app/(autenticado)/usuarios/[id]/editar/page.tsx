@@ -1,9 +1,10 @@
 'use client'
 
-import { Heading } from '@chakra-ui/react'
 import { useParams, useRouter } from 'next/navigation'
 import { Carregando } from '@/components/ui/Carregando.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
+import { avisarSucesso } from '@/components/ui/Avisos.tsx'
+import { PainelDeFormulario } from '@/components/ui/PainelDeFormulario.tsx'
 import { RotaDePerfil } from '@/components/ui/RotaDePerfil.tsx'
 import { useSessao } from '@/features/auth/hooks/useSessao.ts'
 import { FormularioDeUsuario } from '@/features/usuarios/components/FormularioDeUsuario.tsx'
@@ -20,26 +21,26 @@ export default function PaginaDeEdicaoDeUsuario() {
 
   return (
     <RotaDePerfil perfis={['ADMINISTRADOR', 'PROFESSOR']}>
-      <Heading size="lg" mb="4">
-        Editar cadastro
-      </Heading>
-      {alvo.isError && <MensagemDeErro mensagem={mensagemDeErro(alvo.error)} />}
-      {alvo.isPending && <Carregando />}
-      {alvo.data !== undefined && ator !== undefined && (
-        <FormularioDeUsuario
-          usuario={alvo.data}
-          perfisPermitidos={PERFIS_QUE_PODE_CADASTRAR[ator.perfil]}
-          enviando={edicao.isPending}
-          erro={edicao.error === null ? undefined : mensagemDeErro(edicao.error)}
-          aoEnviar={(dados) => {
-            edicao.mutate(dados, {
-              onSuccess: () => {
-                roteador.push('/usuarios')
-              },
-            })
-          }}
-        />
-      )}
+      <PainelDeFormulario titulo="Editar cadastro" descricao="Corrija os dados do usuário." voltarPara="/usuarios">
+        {alvo.isError && <MensagemDeErro mensagem={mensagemDeErro(alvo.error)} />}
+        {alvo.isPending && <Carregando />}
+        {alvo.data !== undefined && ator !== undefined && (
+          <FormularioDeUsuario
+            usuario={alvo.data}
+            perfisPermitidos={PERFIS_QUE_PODE_CADASTRAR[ator.perfil]}
+            enviando={edicao.isPending}
+            erro={edicao.error === null ? undefined : mensagemDeErro(edicao.error)}
+            aoEnviar={(dados) => {
+              edicao.mutate(dados, {
+                onSuccess: () => {
+                  avisarSucesso('Cadastro atualizado')
+                  roteador.push('/usuarios')
+                },
+              })
+            }}
+          />
+        )}
+      </PainelDeFormulario>
     </RotaDePerfil>
   )
 }

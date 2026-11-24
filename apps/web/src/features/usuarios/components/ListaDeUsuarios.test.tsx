@@ -2,13 +2,18 @@
 import { cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AxiosError, type AxiosResponse } from 'axios'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { renderizar, USUARIO_EXEMPLO } from '@/testes/renderizar.tsx'
 import { alterarSituacao, excluirUsuario, listarUsuarios } from '../services/usuarios.service.ts'
 import { ListaDeUsuarios } from './ListaDeUsuarios.tsx'
 
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: string }) => <a href={href}>{children}</a>,
+  default: ({ href, children, ...resto }: { href: string; children: ReactNode }) => (
+    <a href={href} {...resto}>
+      {children}
+    </a>
+  ),
 }))
 vi.mock('../services/usuarios.service.ts', () => ({
   listarUsuarios: vi.fn(),

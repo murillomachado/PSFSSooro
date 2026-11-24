@@ -1,8 +1,9 @@
 'use client'
 
 import type { Perfil, UsuarioResposta } from '@psfssooro/contracts'
-import { Badge, Button, Flex, Table, Text } from '@chakra-ui/react'
-import Link from 'next/link'
+import { Badge, Button } from '@chakra-ui/react'
+import { BotaoDeEditar, BotaoDeExcluir } from '@/components/ui/AcoesDaLinha.tsx'
+import { type Coluna, TabelaResponsiva } from '@/components/ui/TabelaResponsiva.tsx'
 import { NOME_DO_PERFIL } from '../perfis.ts'
 
 interface TabelaDeUsuariosProps {
@@ -12,6 +13,20 @@ interface TabelaDeUsuariosProps {
   readonly aoExcluir: (usuario: UsuarioResposta) => void
 }
 
+const COLUNAS: readonly Coluna<UsuarioResposta>[] = [
+  { titulo: 'Nome', valor: (u) => u.nome },
+  { titulo: 'Usuário', valor: (u) => u.usuario },
+  { titulo: 'Perfil', valor: (u) => NOME_DO_PERFIL[u.perfil] },
+  {
+    titulo: 'Situação',
+    valor: (u) => (
+      <Badge colorPalette={u.ativo ? 'green' : 'gray'} variant="subtle">
+        {u.ativo ? 'Ativo' : 'Inativo'}
+      </Badge>
+    ),
+  },
+]
+
 /** Só o administrador ativa, inativa e exclui (RF2, RN1); administrador e professor editam. */
 export function TabelaDeUsuarios({
   usuarios,
@@ -19,61 +34,36 @@ export function TabelaDeUsuarios({
   aoAlterarSituacao,
   aoExcluir,
 }: Readonly<TabelaDeUsuariosProps>) {
-  if (usuarios.length === 0) return <Text color="fg.muted">Nenhum usuário encontrado.</Text>
   const ehAdmin = perfilDoAtor === 'ADMINISTRADOR'
   return (
-    <Table.Root>
-      <Table.Header>
-        <Table.Row>
-          <Table.ColumnHeader>Nome</Table.ColumnHeader>
-          <Table.ColumnHeader>Usuário</Table.ColumnHeader>
-          <Table.ColumnHeader>Perfil</Table.ColumnHeader>
-          <Table.ColumnHeader>Situação</Table.ColumnHeader>
-          <Table.ColumnHeader>Ações</Table.ColumnHeader>
-        </Table.Row>
-      </Table.Header>
-      <Table.Body>
-        {usuarios.map((usuario) => (
-          <Table.Row key={usuario.id}>
-            <Table.Cell>{usuario.nome}</Table.Cell>
-            <Table.Cell>{usuario.usuario}</Table.Cell>
-            <Table.Cell>{NOME_DO_PERFIL[usuario.perfil]}</Table.Cell>
-            <Table.Cell>
-              <Badge colorPalette={usuario.ativo ? 'green' : 'gray'}>{usuario.ativo ? 'Ativo' : 'Inativo'}</Badge>
-            </Table.Cell>
-            <Table.Cell>
-              <Flex gap="2">
-                <Button asChild size="xs" variant="outline">
-                  <Link href={`/usuarios/${usuario.id}/editar`}>Editar</Link>
-                </Button>
-                {ehAdmin && (
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    onClick={() => {
-                      aoAlterarSituacao(usuario)
-                    }}
-                  >
-                    {usuario.ativo ? 'Inativar' : 'Ativar'}
-                  </Button>
-                )}
-                {ehAdmin && (
-                  <Button
-                    size="xs"
-                    variant="outline"
-                    colorPalette="red"
-                    onClick={() => {
-                      aoExcluir(usuario)
-                    }}
-                  >
-                    Excluir
-                  </Button>
-                )}
-              </Flex>
-            </Table.Cell>
-          </Table.Row>
-        ))}
-      </Table.Body>
-    </Table.Root>
+    <TabelaResponsiva
+      itens={usuarios}
+      colunas={COLUNAS}
+      chave={(u) => u.id}
+      vazio="Nenhum usuário encontrado."
+      acoes={(usuario) => (
+        <>
+          <BotaoDeEditar href={`/usuarios/${usuario.id}/editar`} />
+          {ehAdmin && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                aoAlterarSituacao(usuario)
+              }}
+            >
+              {usuario.ativo ? 'Inativar' : 'Ativar'}
+            </Button>
+          )}
+          {ehAdmin && (
+            <BotaoDeExcluir
+              aoClicar={() => {
+                aoExcluir(usuario)
+              }}
+            />
+          )}
+        </>
+      )}
+    />
   )
 }

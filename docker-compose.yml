@@ -1,3 +1,6 @@
+# Nome fixo do projeto: sem ele, o Docker usa o nome da pasta onde o repositório foi clonado.
+name: psfssooro
+
 # Sobe o sistema inteiro: docker compose up --build
 # Web em http://localhost:3000 · API em http://localhost:3333
 services:
