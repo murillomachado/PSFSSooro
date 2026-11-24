@@ -1,0 +1,14 @@
+# Todo arquivo de texto entra e sai do repositório com LF, inclusive no Windows.
+# Sem isso, scripts e hooks com CRLF quebram no Linux do CI e do Docker.
+* text=auto eol=lf
+
+# Binários: nunca converter
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.sqlite binary
