@@ -49,7 +49,7 @@ Todos com a senha `senha1234`.
 
 ## Como testar os requisitos
 
-Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dizer que a API já cumpre o requisito e a tela chega nas próximas etapas. Enquanto isso, a coluna "Como ver" aponta para os passos de [Testando a API](#testando-a-api).
+Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. Todos os requisitos funcionam na tela e na API. A coluna "Como ver" diz o caminho na tela; os passos de [Testando a API](#testando-a-api) mostram o mesmo pela API.
 
 ### Requisitos funcionais
 
@@ -73,25 +73,25 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | RN5    | Professor cadastra e edita avaliações                                                         | Como `prof.paulo`: registra e **Editar** só as próprias; nas de `prof.carla` não há botão (e a API devolve 403)               | ✅       |
 | RN6    | Professor consulta as avaliações de seus alunos                                               | Como `prof.paulo`, **Avaliações** lista as avaliações de todos os alunos                                                      | ✅       |
 | RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `aluno.ana`, **Minhas avaliações** mostra só as dela, sem ações                                                          | ✅       |
-| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403                                               | ✅ API   |
+| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403                                               | ✅       |
 | RN9    | Usuário inativo não pode ter novas avaliações                                                 | No formulário só aparecem alunos e professores ativos; `aluno.inativo` não pode ser escolhido (a API também recusa, 422)      | ✅       |
 
 ### Exigências técnicas
 
-| Exigência                                                                                      | Onde está                                                                                     | Situação |
-| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
-| Monorepo no GitHub, Conventional Commits                                                       | este repositório; commitlint no commit e no CI                                                | ✅       |
-| Versões fixas (sem `^` nem `~`), Node em `engines` e `.nvmrc`, pnpm em `packageManager`        | `pnpm check-versions`, também no CI                                                           | ✅       |
-| TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                                                          | ✅       |
-| Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts`                             | ✅       |
-| Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth`, `usuarios` e `avaliacoes`                                                     | 🔶       |
-| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios                              | ✅       |
-| Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web`                                                                                    | ⏳       |
-| Testes e Docker (diferenciais)                                                                 | `pnpm test` (unidade e integração), `pnpm test:e2e` (Playwright), `docker compose up --build` | ✅       |
+| Exigência                                                                                      | Onde está                                                                                                                                     | Situação |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| Monorepo no GitHub, Conventional Commits                                                       | este repositório; commitlint no commit e no CI                                                                                                | ✅       |
+| Versões fixas (sem `^` nem `~`), Node em `engines` e `.nvmrc`, pnpm em `packageManager`        | `pnpm check-versions`, também no CI                                                                                                           | ✅       |
+| TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                                                                                                          | ✅       |
+| Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts`                                                                             | ✅       |
+| Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | `apps/api/src/modules/*` (`domain`, `application`, `infra`, `http`), middlewares em `src/shared/http`, `.env.example`                         | ✅       |
+| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios                                                                              | ✅       |
+| Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web/src/components/ui`; `FormularioDeUsuario` e `FormularioDeAvaliacao` servem a cadastro e edição; `Carregando` e botões com `loading` | ✅       |
+| Testes e Docker (diferenciais)                                                                 | `pnpm test` (unidade e integração), `pnpm test:e2e` (Playwright), `docker compose up --build`                                                 | ✅       |
 
 ## Testando a API
 
-Enquanto a tela não chega, estes passos exercitam os requisitos com `curl`, em um terminal bash (Linux, macOS, WSL ou Git Bash). Com a API no ar (veja [Como executar](#como-executar)):
+Estes passos exercitam os mesmos requisitos direto na API, com `curl`, em um terminal bash (Linux, macOS, WSL ou Git Bash). Com a API no ar (veja [Como executar](#como-executar)):
 
 ```bash
 API=http://localhost:3333/api
