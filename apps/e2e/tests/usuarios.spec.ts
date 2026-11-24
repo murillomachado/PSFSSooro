@@ -5,7 +5,7 @@ test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
   test('o administrador cadastra, edita, inativa, reativa e exclui um professor', async ({ page }) => {
     const nome = `Marta ${sufixo()}`
     const login = `prof.${sufixo()}`
-    await entrarComSucesso(page, 'admin')
+    await entrarComSucesso(page, 'michael.scott')
     await page.getByRole('link', { name: 'Usuários' }).click()
     await page.getByRole('link', { name: 'Novo cadastro' }).click()
     await expect(page.getByRole('heading', { name: 'Novo cadastro' })).toBeVisible()
@@ -33,19 +33,19 @@ test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
   })
 
   test('um nome de usuário repetido é recusado com a mensagem da API', async ({ page }) => {
-    await entrarComSucesso(page, 'admin')
+    await entrarComSucesso(page, 'michael.scott')
     await page.goto('/usuarios/novo')
     await page.getByLabel('Nome', { exact: true }).fill('Outro Admin')
-    await page.getByLabel('Usuário (login)').fill('admin')
+    await page.getByLabel('Usuário (login)').fill('michael.scott')
     await page.getByLabel('Senha', { exact: true }).fill('senha1234')
     await page.getByRole('button', { name: 'Cadastrar' }).click()
     await expect(page.getByText('Já existe um usuário com este nome de usuário.')).toBeVisible()
   })
 
   test('não exclui quem tem avaliações: a tela mostra o motivo (RN1)', async ({ page }) => {
-    await entrarComSucesso(page, 'admin')
+    await entrarComSucesso(page, 'michael.scott')
     await page.goto('/usuarios')
-    const linha = linhaCom(page, 'Ana Souza')
+    const linha = linhaCom(page, 'Pam Beesly')
     await linha.getByRole('button', { name: 'Excluir' }).click()
     await page.getByRole('alertdialog').getByRole('button', { name: 'Excluir' }).click()
     await expect(page.getByText(/avaliações vinculadas/)).toBeVisible()
@@ -54,9 +54,9 @@ test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
 
   test('o professor só lista e cadastra alunos, e não vê situação nem exclusão (RN4)', async ({ page }) => {
     const nome = `Aluno ${sufixo()}`
-    await entrarComSucesso(page, 'prof.paulo')
+    await entrarComSucesso(page, 'dwight.schrute')
     await page.getByRole('link', { name: 'Alunos' }).click()
-    await expect(linhaCom(page, 'Ana Souza')).toBeVisible()
+    await expect(linhaCom(page, 'Pam Beesly')).toBeVisible()
     await expect(page.locator('tbody tr', { hasText: 'Professor' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: /Inativar|Excluir/ })).toHaveCount(0)
 
@@ -70,7 +70,7 @@ test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
   })
 
   test('o aluno não acessa a área de usuários', async ({ page }) => {
-    await entrarComSucesso(page, 'aluno.ana')
+    await entrarComSucesso(page, 'pam.beesly')
     await page.goto('/usuarios')
     await expect(page).toHaveURL(/\/inicio$/)
   })

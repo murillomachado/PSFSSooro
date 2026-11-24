@@ -40,12 +40,12 @@ Para rodar todos os gates de qualidade: `pnpm verify`. Os testes de ponta a pont
 
 Todos com a senha `senha1234`.
 
-| Usuário                    | Perfil        | Situação                       |
-| -------------------------- | ------------- | ------------------------------ |
-| `admin`                    | Administrador | ativo                          |
-| `prof.paulo`, `prof.carla` | Professor     | ativo                          |
-| `aluno.ana`, `aluno.bruno` | Aluno         | ativo                          |
-| `aluno.inativo`            | Aluno         | **inativo**, para testar a RN8 |
+| Usuário                                                                         | Perfil        | Situação                                                    |
+| ------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------- |
+| `michael.scott`                                                                 | Administrador | ativo                                                       |
+| `dwight.schrute`, `jim.halpert`                                                 | Professor     | ativo                                                       |
+| `pam.beesly`, `kevin.malone`, `stanley.hudson`, `andy.bernard`, `angela.martin` | Aluno         | ativo, com seis avaliações mensais (maio a outubro de 2026) |
+| `ryan.howard`                                                                   | Aluno         | **inativo**, para testar a RN8                              |
 
 ## Como testar os requisitos
 
@@ -53,28 +53,28 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. Todos os requisitos
 
 ### Requisitos funcionais
 
-| Código | O que a especificação pede                                         | Como ver                                                                                                                               | Situação |
-| ------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Entre como `admin`, abra **Usuários** > **Novo cadastro** e crie os três perfis; **Editar** usa o mesmo formulário                     | ✅       |
-| RF2    | Ativar ou inativar um usuário                                      | Como `admin`, em **Usuários**, **Inativar** / **Ativar** muda a situação na hora                                                       | ✅       |
-| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Como `prof.paulo`: **Avaliações** > **Nova avaliação**; informe aluno, data, altura (m) e peso (kg)                                    | ✅       |
-| RF4    | Gravar a classificação do IMC conforme a tabela                    | Na lista, a coluna **Classificação** mostra a faixa do IMC (etiqueta colorida) calculada pela API                                      | ✅       |
-| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | **Avaliações**: filtros por aluno, professor (administrador; o professor tem "somente as minhas") e período                            | ✅       |
-| RF6    | Autenticar com usuário e senha (administrador, professor ou aluno) | Na tela de login (http://localhost:3000), entre como `admin`, `prof.paulo` ou `aluno.ana`; senha errada mostra o erro. Na API: passo 1 | ✅       |
+| Código | O que a especificação pede                                         | Como ver                                                                                                                                            | Situação |
+| ------ | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Entre como `michael.scott`, abra **Usuários** > **Novo cadastro** e crie os três perfis; **Editar** usa o mesmo formulário                          | ✅       |
+| RF2    | Ativar ou inativar um usuário                                      | Como `michael.scott`, em **Usuários**, **Inativar** / **Ativar** muda a situação na hora                                                            | ✅       |
+| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Como `dwight.schrute`: **Avaliações** > **Nova avaliação**; informe aluno, data, altura (m) e peso (kg)                                             | ✅       |
+| RF4    | Gravar a classificação do IMC conforme a tabela                    | Na lista, a coluna **Classificação** mostra a faixa do IMC (etiqueta colorida) calculada pela API                                                   | ✅       |
+| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | **Avaliações**: filtros por aluno, professor (administrador; o professor tem "somente as minhas") e período                                         | ✅       |
+| RF6    | Autenticar com usuário e senha (administrador, professor ou aluno) | Na tela de login (http://localhost:3000), entre como `michael.scott`, `dwight.schrute` ou `pam.beesly`; senha errada mostra o erro. Na API: passo 1 | ✅       |
 
 ### Regras de negócio
 
-| Código | O que a especificação pede                                                                    | Como ver                                                                                                                      | Situação |
-| ------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
-| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Como `admin`: cadastra, edita e **Excluir** (com confirmação). Excluir quem tem avaliações (ex.: `aluno.ana`) mostra o motivo | ✅       |
-| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Como `admin`: registra (escolhendo o professor), **Editar** qualquer avaliação e **Excluir** com confirmação                  | ✅       |
-| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Como `admin`, **Avaliações** lista as de todos os alunos; filtre por aluno                                                    | ✅       |
-| RN4    | Professor cadastra e edita alunos                                                             | Como `prof.paulo`, o menu é **Alunos**: lista só alunos e cadastra/edita aluno, sem escolher perfil nem inativar/excluir      | ✅       |
-| RN5    | Professor cadastra e edita avaliações                                                         | Como `prof.paulo`: registra e **Editar** só as próprias; nas de `prof.carla` não há botão (e a API devolve 403)               | ✅       |
-| RN6    | Professor consulta as avaliações de seus alunos                                               | Como `prof.paulo`, **Avaliações** lista as avaliações de todos os alunos                                                      | ✅       |
-| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `aluno.ana`, **Minhas avaliações** mostra só as dela, sem ações                                                          | ✅       |
-| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403                                               | ✅       |
-| RN9    | Usuário inativo não pode ter novas avaliações                                                 | No formulário só aparecem alunos e professores ativos; `aluno.inativo` não pode ser escolhido (a API também recusa, 422)      | ✅       |
+| Código | O que a especificação pede                                                                    | Como ver                                                                                                                               | Situação |
+| ------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Como `michael.scott`: cadastra, edita e **Excluir** (com confirmação). Excluir quem tem avaliações (ex.: `pam.beesly`) mostra o motivo | ✅       |
+| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Como `michael.scott`: registra (escolhendo o professor), **Editar** qualquer avaliação e **Excluir** com confirmação                   | ✅       |
+| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Como `michael.scott`, **Avaliações** lista as de todos os alunos; filtre por aluno                                                     | ✅       |
+| RN4    | Professor cadastra e edita alunos                                                             | Como `dwight.schrute`, o menu é **Alunos**: lista só alunos e cadastra/edita aluno, sem escolher perfil nem inativar/excluir           | ✅       |
+| RN5    | Professor cadastra e edita avaliações                                                         | Como `dwight.schrute`: registra e **Editar** só as próprias; nas de `jim.halpert` não há botão (e a API devolve 403)                   | ✅       |
+| RN6    | Professor consulta as avaliações de seus alunos                                               | Como `dwight.schrute`, **Avaliações** lista as avaliações de todos os alunos                                                           | ✅       |
+| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `pam.beesly`, **Minhas avaliações** mostra só as dela, sem ações                                                                  | ✅       |
+| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `ryan.howard` recebe 403                                                          | ✅       |
+| RN9    | Usuário inativo não pode ter novas avaliações                                                 | No formulário só aparecem alunos e professores ativos; `ryan.howard` não pode ser escolhido (a API também recusa, 422)                 | ✅       |
 
 ### Exigências técnicas
 
@@ -99,7 +99,7 @@ JSON='Content-Type: application/json'
 pegar_token() { curl -s -X POST $API/auth/login -H "$JSON" -d "{\"usuario\":\"$1\",\"senha\":\"senha1234\"}" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token"; }
 
 # 1. Entrar (RF6)
-TOKEN=$(pegar_token admin)
+TOKEN=$(pegar_token michael.scott)
 
 # 2. Listar os usuários (só administrador e professor)
 curl -s $API/usuarios -H "Authorization: Bearer $TOKEN"
@@ -116,26 +116,26 @@ curl -s -X PATCH $API/usuarios/ID/situacao -H "Authorization: Bearer $TOKEN" -H 
 curl -s -i -X POST $API/auth/login -H "$JSON" -d '{"usuario":"prof.marta","senha":"senha1234"}'   # 403
 
 # 6. Professor (RN4): só vê alunos, cadastra aluno, mas não cadastra professor
-PROF=$(pegar_token prof.paulo)
+PROF=$(pegar_token dwight.schrute)
 curl -s $API/usuarios -H "Authorization: Bearer $PROF"
 curl -s -i -X POST $API/usuarios -H "Authorization: Bearer $PROF" -H "$JSON" \
   -d '{"nome":"Outro Prof","usuario":"prof.outro","senha":"senha1234","perfil":"PROFESSOR"}'     # 403
 
 # 7. Registrar uma avaliação (RF3, RF4, RN5, RN9): o professor é o avaliador; o IMC vem calculado
-ANA=$(curl -s "$API/usuarios?busca=ana" -H "Authorization: Bearer $PROF" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).itens[0].id")
+PAM=$(curl -s "$API/usuarios?busca=pam" -H "Authorization: Bearer $PROF" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).itens[0].id")
 curl -s -X POST $API/avaliacoes -H "Authorization: Bearer $PROF" -H "$JSON" \
-  -d "{\"alunoId\":\"$ANA\",\"dataAvaliacao\":\"2026-11-20\",\"alturaM\":1.75,\"pesoKg\":72}"   # imc 23.5, PESO_NORMAL
+  -d "{\"alunoId\":\"$PAM\",\"dataAvaliacao\":\"2026-11-20\",\"alturaM\":1.75,\"pesoKg\":72}"   # imc 23.5, PESO_NORMAL
 
 # 8. Consultar (RF5, RN3, RN6, RN7): filtros alunoId, professorId, de e ate; o aluno só vê as próprias
-curl -s "$API/avaliacoes?alunoId=$ANA&de=2026-09-01" -H "Authorization: Bearer $TOKEN"
-curl -s $API/avaliacoes -H "Authorization: Bearer $(pegar_token aluno.ana)"
+curl -s "$API/avaliacoes?alunoId=$PAM&de=2026-09-01" -H "Authorization: Bearer $TOKEN"
+curl -s $API/avaliacoes -H "Authorization: Bearer $(pegar_token pam.beesly)"
 
 # 9. Editar e excluir (RN2, RN5): troque AV pelo id de uma avaliação; o IMC é recalculado
 curl -s -X PUT $API/avaliacoes/AV -H "Authorization: Bearer $PROF" -H "$JSON" -d '{"pesoKg":90}'
 curl -s -i -X DELETE $API/avaliacoes/AV -H "Authorization: Bearer $TOKEN"                              # 204; professor leva 403
 
 # 10. Excluir usuário (RN1): só sem avaliações
-curl -s -i -X DELETE $API/usuarios/$ANA -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
+curl -s -i -X DELETE $API/usuarios/$PAM -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
 ```
 
 Todo erro volta no formato `application/problem+json` (RFC 9457), com `status`, `codigo` e, nos erros de validação, a lista de `campos`.
