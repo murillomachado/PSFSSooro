@@ -3,3 +3,4 @@ pnpm-lock.yaml
 **/.next/
 **/coverage/
 jscpd-report/
+next-env.d.ts

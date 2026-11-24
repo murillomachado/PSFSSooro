@@ -128,6 +128,11 @@ export default defineConfig([
     rules: { 'no-restricted-imports': restringirImports([...WEB_SEM_BACK, ...AXIOS_SO_NO_CLIENT]) },
   },
   {
+    // Os testes montam respostas de erro do Axios (AxiosError); telas e services seguem sem importá-lo.
+    files: ['apps/web/**/*.test.ts', 'apps/web/**/*.test.tsx'],
+    rules: { 'no-restricted-imports': restringirImports(WEB_SEM_BACK) },
+  },
+  {
     files: ['apps/web/src/lib/http-client.ts'],
     rules: { 'no-restricted-imports': restringirImports(WEB_SEM_BACK) },
   },
