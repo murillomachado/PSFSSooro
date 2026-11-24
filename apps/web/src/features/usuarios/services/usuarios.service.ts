@@ -9,6 +9,7 @@ import { http } from '@/lib/http-client.ts'
 
 export interface FiltrosDaLista {
   readonly pagina: number
+  readonly limite?: number
   readonly busca?: string
   readonly perfil?: Perfil
   readonly ativo?: boolean

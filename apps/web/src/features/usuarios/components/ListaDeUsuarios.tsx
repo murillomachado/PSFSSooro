@@ -1,12 +1,13 @@
 'use client'
 
 import type { Perfil, UsuarioResposta } from '@psfssooro/contracts'
-import { useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Carregando } from '@/components/ui/Carregando.tsx'
 import { DialogoDeConfirmacao } from '@/components/ui/DialogoDeConfirmacao.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
 import { Paginacao } from '@/components/ui/Paginacao.tsx'
 import { mensagemDeErro } from '@/lib/http-client.ts'
+import { usePaginaValida } from '@/lib/usePaginaValida.ts'
 import { useAlterarSituacao, useExcluirUsuario, useListaDeUsuarios } from '../hooks/useUsuarios.ts'
 import type { FiltrosDaLista } from '../services/usuarios.service.ts'
 import { FiltrosDeUsuarios } from './FiltrosDeUsuarios.tsx'
@@ -19,14 +20,12 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
   const situacao = useAlterarSituacao()
   const exclusao = useExcluirUsuario()
 
-  // Excluir o último item de uma página deixa a página pedida sem itens: volta para a última que existe.
-  const { data } = lista
-  useEffect(() => {
-    if (data !== undefined && data.itens.length === 0 && data.pagina > 1) {
-      const ultima = Math.max(1, Math.ceil(data.total / data.limite))
-      definirFiltros((atuais) => ({ ...atuais, pagina: Math.min(atuais.pagina, ultima) }))
-    }
-  }, [data])
+  usePaginaValida(
+    lista.data,
+    useCallback((pagina: number) => {
+      definirFiltros((atuais) => ({ ...atuais, pagina }))
+    }, []),
+  )
 
   const confirmarExclusao = () => {
     if (paraExcluir === undefined) return

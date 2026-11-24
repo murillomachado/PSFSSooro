@@ -28,6 +28,9 @@ export default function LayoutAutenticado({ children }: { readonly children: Rea
           <LinkDoChakra asChild>
             <Link href="/inicio">Início</Link>
           </LinkDoChakra>
+          <LinkDoChakra asChild>
+            <Link href="/avaliacoes">{usuario.perfil === 'ALUNO' ? 'Minhas avaliações' : 'Avaliações'}</Link>
+          </LinkDoChakra>
           {usuario.perfil !== 'ALUNO' && (
             <LinkDoChakra asChild>
               <Link href="/usuarios">{usuario.perfil === 'ADMINISTRADOR' ? 'Usuários' : 'Alunos'}</Link>

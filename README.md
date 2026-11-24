@@ -47,9 +47,9 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | ------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
 | RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Entre como `admin`, abra **Usuários** > **Novo cadastro** e crie os três perfis; **Editar** usa o mesmo formulário                     | ✅       |
 | RF2    | Ativar ou inativar um usuário                                      | Como `admin`, em **Usuários**, **Inativar** / **Ativar** muda a situação na hora                                                       | ✅       |
-| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Passo 7: o professor registra uma avaliação; altura e peso viram IMC                                                                   | ✅ API   |
-| RF4    | Gravar a classificação do IMC conforme a tabela                    | Passo 7: a resposta traz a classificação (código e descrição)                                                                          | ✅ API   |
-| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | Passo 8: lista com filtro por aluno, professor e período                                                                               | ✅ API   |
+| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Como `prof.paulo`: **Avaliações** > **Nova avaliação**; informe aluno, data, altura (m) e peso (kg)                                    | ✅       |
+| RF4    | Gravar a classificação do IMC conforme a tabela                    | Na lista, a coluna **Classificação** mostra a faixa do IMC (etiqueta colorida) calculada pela API                                      | ✅       |
+| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | **Avaliações**: filtros por aluno, professor (administrador; o professor tem "somente as minhas") e período                            | ✅       |
 | RF6    | Autenticar com usuário e senha (administrador, professor ou aluno) | Na tela de login (http://localhost:3000), entre como `admin`, `prof.paulo` ou `aluno.ana`; senha errada mostra o erro. Na API: passo 1 | ✅       |
 
 ### Regras de negócio
@@ -57,14 +57,14 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | Código | O que a especificação pede                                                                    | Como ver                                                                                                                      | Situação |
 | ------ | --------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------- |
 | RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Como `admin`: cadastra, edita e **Excluir** (com confirmação). Excluir quem tem avaliações (ex.: `aluno.ana`) mostra o motivo | ✅       |
-| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Passo 9: o administrador edita e exclui qualquer avaliação                                                                    | ✅ API   |
-| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Passo 8: o administrador lista as avaliações de qualquer aluno                                                                | ✅ API   |
+| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Como `admin`: registra (escolhendo o professor), **Editar** qualquer avaliação e **Excluir** com confirmação                  | ✅       |
+| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Como `admin`, **Avaliações** lista as de todos os alunos; filtre por aluno                                                    | ✅       |
 | RN4    | Professor cadastra e edita alunos                                                             | Como `prof.paulo`, o menu é **Alunos**: lista só alunos e cadastra/edita aluno, sem escolher perfil nem inativar/excluir      | ✅       |
-| RN5    | Professor cadastra e edita avaliações                                                         | Passos 7 e 9: o professor registra e edita as suas (403 nas dos colegas)                                                      | ✅ API   |
-| RN6    | Professor consulta as avaliações de seus alunos                                               | Passo 8: o professor lista as avaliações dos alunos                                                                           | ✅ API   |
-| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Passo 8: como `aluno.ana`, só aparecem as dela                                                                                | ✅ API   |
+| RN5    | Professor cadastra e edita avaliações                                                         | Como `prof.paulo`: registra e **Editar** só as próprias; nas de `prof.carla` não há botão (e a API devolve 403)               | ✅       |
+| RN6    | Professor consulta as avaliações de seus alunos                                               | Como `prof.paulo`, **Avaliações** lista as avaliações de todos os alunos                                                      | ✅       |
+| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `aluno.ana`, **Minhas avaliações** mostra só as dela, sem ações                                                          | ✅       |
 | RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `aluno.inativo` recebe 403                                               | ✅ API   |
-| RN9    | Usuário inativo não pode ter novas avaliações                                                 | Passo 7: avaliar `aluno.inativo` devolve 422                                                                                  | ✅ API   |
+| RN9    | Usuário inativo não pode ter novas avaliações                                                 | No formulário só aparecem alunos e professores ativos; `aluno.inativo` não pode ser escolhido (a API também recusa, 422)      | ✅       |
 
 ### Exigências técnicas
 
@@ -75,7 +75,7 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                              | ✅       |
 | Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts` | ✅       |
 | Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth`, `usuarios` e `avaliacoes`                         | 🔶       |
-| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios  | 🔶       |
+| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios  | ✅       |
 | Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web`                                                        | ⏳       |
 | Testes e Docker (diferenciais)                                                                 | testes em cada PR (`pnpm test`); Docker a seguir                  | 🔶       |
 
