@@ -5,9 +5,8 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { type ReactNode, useEffect } from 'react'
 import { Carregando } from '@/components/ui/Carregando.tsx'
+import { NOME_DO_PERFIL } from '@/features/usuarios/perfis.ts'
 import { useSairAoPerderASessao, useSessao } from '@/features/auth/hooks/useSessao.ts'
-
-const NOME_DO_PERFIL = { ADMINISTRADOR: 'Administrador', PROFESSOR: 'Professor', ALUNO: 'Aluno' } as const
 
 /** Tudo que fica dentro deste grupo exige sessão: sem ela, vai para o login. */
 export default function LayoutAutenticado({ children }: { readonly children: ReactNode }) {

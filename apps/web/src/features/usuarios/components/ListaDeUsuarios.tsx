@@ -1,7 +1,7 @@
 'use client'
 
 import type { Perfil, UsuarioResposta } from '@psfssooro/contracts'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Carregando } from '@/components/ui/Carregando.tsx'
 import { DialogoDeConfirmacao } from '@/components/ui/DialogoDeConfirmacao.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
@@ -19,8 +19,19 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
   const situacao = useAlterarSituacao()
   const exclusao = useExcluirUsuario()
 
+  // Excluir o último item de uma página deixa a página pedida sem itens: volta para a última que existe.
+  const { data } = lista
+  useEffect(() => {
+    if (data !== undefined && data.itens.length === 0 && data.pagina > 1) {
+      const ultima = Math.max(1, Math.ceil(data.total / data.limite))
+      definirFiltros((atuais) => ({ ...atuais, pagina: Math.min(atuais.pagina, ultima) }))
+    }
+  }, [data])
+
   const confirmarExclusao = () => {
     if (paraExcluir === undefined) return
+    exclusao.reset()
+    situacao.reset()
     exclusao.mutate(paraExcluir.id, {
       onSettled: () => {
         definirParaExcluir(undefined)
@@ -46,6 +57,7 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
             usuarios={lista.data.itens}
             perfilDoAtor={perfilDoAtor}
             aoAlterarSituacao={(usuario) => {
+              exclusao.reset()
               situacao.mutate({ id: usuario.id, ativo: !usuario.ativo })
             }}
             aoExcluir={definirParaExcluir}

@@ -21,7 +21,8 @@ export const useListaDeUsuarios = (filtros: FiltrosDaLista) =>
     placeholderData: keepPreviousData,
   })
 
-export const useUsuario = (id: string) => useQuery({ queryKey: [CHAVE, 'um', id], queryFn: () => obterUsuario(id) })
+export const useUsuario = (id: string) =>
+  useQuery({ queryKey: [CHAVE, 'um', id], queryFn: () => obterUsuario(id), gcTime: 0 })
 
 /** Depois de qualquer mudança, as listas e os detalhes em cache são refeitos. */
 function useMutacao<T>(funcao: (entrada: T) => Promise<unknown>) {

@@ -121,4 +121,15 @@ describe('ListaDeUsuarios (RF2, RN1, RN4)', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: 'Filtrar' }))
     expect(await screen.findByText('Nenhum usuário encontrado.')).toBeDefined()
   })
+
+  it('se a página pedida ficou sem itens (excluiu o último dela), volta para a última que existe', async () => {
+    vi.mocked(listarUsuarios).mockResolvedValue(pagina([USUARIO_EXEMPLO], { total: 25 }))
+    renderizar(<ListaDeUsuarios perfilDoAtor="ADMINISTRADOR" />)
+    await screen.findByText(/Página 1 de 2/)
+    vi.mocked(listarUsuarios).mockResolvedValue(pagina([], { total: 20, pagina: 2 }))
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Próxima' }))
+    await waitFor(() => {
+      expect(listarUsuarios).toHaveBeenLastCalledWith({ pagina: 1 })
+    })
+  })
 })
