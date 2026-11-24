@@ -1,3 +1,5 @@
+'use client'
+
 import { Box, Heading, Text } from '@chakra-ui/react'
 import { FormularioDeLogin } from '@/features/auth/components/FormularioDeLogin.tsx'
 

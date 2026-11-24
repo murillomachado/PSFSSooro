@@ -36,3 +36,4 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 next-env.d.ts
+apps/web/AGENTS.md
