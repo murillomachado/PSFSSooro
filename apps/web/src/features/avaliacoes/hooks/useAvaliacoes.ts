@@ -1,6 +1,6 @@
 'use client'
 
-import { type CriarAvaliacaoEntrada, type EditarAvaliacaoEntrada, LIMITE_MAXIMO } from '@psfssooro/contracts'
+import type { CriarAvaliacaoEntrada, EditarAvaliacaoEntrada } from '@psfssooro/contracts'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   criarAvaliacao,
@@ -11,36 +11,39 @@ import {
   listarFaixasImc,
   obterAvaliacao,
 } from '../services/avaliacoes.service.ts'
-
-const CHAVE = 'avaliacoes'
+import { CHAVE_DE_AVALIACOES, chavesDeAvaliacoes, filtrosDoHistorico } from '../chaves.ts'
 
 export const useListaDeAvaliacoes = (filtros: FiltrosDeAvaliacoes) =>
   useQuery({
-    queryKey: [CHAVE, 'lista', filtros],
+    queryKey: chavesDeAvaliacoes.lista(filtros),
     queryFn: () => listarAvaliacoes(filtros),
     placeholderData: keepPreviousData,
   })
 
 /** A tabela de faixas não muda enquanto o sistema está no ar: é pedida uma vez só. */
 export const useFaixasImc = () =>
-  useQuery({ queryKey: [CHAVE, 'faixas'], queryFn: listarFaixasImc, staleTime: Number.POSITIVE_INFINITY })
+  useQuery({
+    queryKey: chavesDeAvaliacoes.faixas(),
+    queryFn: () => listarFaixasImc(),
+    staleTime: Number.POSITIVE_INFINITY,
+  })
 
 /** Todo o histórico de um aluno (até o teto de paginação da API), para o gráfico de evolução. */
 export const useHistoricoDoAluno = (alunoId: string) =>
   useQuery({
-    queryKey: [CHAVE, 'lista', { pagina: 1, limite: LIMITE_MAXIMO, alunoId }],
-    queryFn: () => listarAvaliacoes({ pagina: 1, limite: LIMITE_MAXIMO, alunoId }),
+    queryKey: chavesDeAvaliacoes.lista(filtrosDoHistorico(alunoId)),
+    queryFn: () => listarAvaliacoes(filtrosDoHistorico(alunoId)),
   })
 
 export const useAvaliacao = (id: string) =>
-  useQuery({ queryKey: [CHAVE, 'uma', id], queryFn: () => obterAvaliacao(id), gcTime: 0 })
+  useQuery({ queryKey: chavesDeAvaliacoes.uma(id), queryFn: () => obterAvaliacao(id), gcTime: 0 })
 
 /** Depois de qualquer mudança, as listas e os detalhes em cache são refeitos. */
 function useMutacao<T>(funcao: (entrada: T) => Promise<unknown>) {
   const cliente = useQueryClient()
   return useMutation({
     mutationFn: funcao,
-    onSuccess: () => cliente.invalidateQueries({ queryKey: [CHAVE] }),
+    onSuccess: () => cliente.invalidateQueries({ queryKey: [CHAVE_DE_AVALIACOES] }),
   })
 }
 

@@ -6,7 +6,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { obterSessao, sairDaSessao } from '@/features/auth/services/auth.service.ts'
 import { sistema } from '@/theme/sistema.ts'
-import LayoutAutenticado from './layout.tsx'
+import { AreaAutenticada } from './AreaAutenticada.tsx'
 
 const substituir = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: substituir }), usePathname: () => '/inicio' }))
@@ -30,9 +30,9 @@ function montar() {
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <ChakraProvider value={sistema}>
-        <LayoutAutenticado>
+        <AreaAutenticada>
           <p>conteúdo protegido</p>
-        </LayoutAutenticado>
+        </AreaAutenticada>
       </ChakraProvider>
     </QueryClientProvider>,
   )

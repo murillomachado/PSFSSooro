@@ -63,4 +63,20 @@ test.describe('RF6 e RN8: autenticação', () => {
     await expect(page.getByText(/Muitas tentativas de login/)).toBeVisible()
     await expect(page).toHaveURL(/\/login$/)
   })
+
+  test('as telas chegam do servidor já com os dados (renderização híbrida)', async ({ page }) => {
+    await entrarComSucesso(page, 'michael.scott')
+    // O HTML cru, antes de qualquer JavaScript rodar no navegador: a lista já vem preenchida.
+    const avaliacoes = await (await page.request.get('/avaliacoes')).text()
+    expect(avaliacoes).toContain('Kevin Malone')
+    expect(avaliacoes).toContain('Obesidade grau I')
+    const usuarios = await (await page.request.get('/usuarios')).text()
+    expect(usuarios).toContain('dwight.schrute')
+    await sair(page)
+
+    await entrarComSucesso(page, 'pam.beesly')
+    const inicio = await (await page.request.get('/inicio')).text()
+    expect(inicio).toContain('Evolução do IMC')
+    expect(inicio).toContain('Pam Beesly · 6 avaliações')
+  })
 })

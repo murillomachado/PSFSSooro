@@ -24,7 +24,7 @@ Leia antes de qualquer trabalho. O objetivo é **passar no teste técnico**: o a
 ## Arquitetura
 
 - `apps/api`: módulos `auth`, `usuarios` e `avaliacoes`, cada um com `domain/` (regras, sem HTTP nem ORM), `application/` (casos de uso e as interfaces que eles precisam), `infra/` (entidade do TypeORM, mapper e repositório) e `http/` (controller e rotas). `container.ts` é a única raiz de composição; middlewares `autenticar`, `autorizar(...perfis)`, `validar` e `tratarErros` (RFC 9457).
-- `apps/web`: `features/*/{services,hooks}`, `components/ui` (componentes reutilizáveis), `lib/http-client.ts` (único lugar que importa o Axios; a sessão viaja num cookie httpOnly) e `src/proxy.ts` (confere a sessão e o perfil no servidor antes de cada página).
+- `apps/web`: `features/*/{services,hooks}`, `components/ui` (componentes reutilizáveis), `lib/http-client.ts` (único lugar que importa o Axios; a sessão viaja num cookie httpOnly) e `src/proxy.ts` (confere a sessão e o perfil no servidor antes de cada página). As páginas internas são componentes do servidor que preenchem o cache (`features/*/precarregar.ts`, com as chaves de `features/*/chaves.ts`) e entregam a tela de cliente (`features/*/components/Tela*.tsx`).
 - O lint barra as violações de fronteira. As decisões e as armadilhas conhecidas estão em [docs/decisoes.md](docs/decisoes.md).
 
 ## Armadilhas já conhecidas

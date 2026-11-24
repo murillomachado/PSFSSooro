@@ -87,7 +87,7 @@ Situação: ✅ funcionando. Todos os requisitos funcionam na tela e na API. A c
 | TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                                                                                                                                                                                                   | ✅       |
 | Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts`                                                                                                                                                                      | ✅       |
 | Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | `apps/api/src/modules/*` (`domain`, `application`, `infra`, `http`), middlewares em `src/shared/http`, `.env.example`                                                                                                                  | ✅       |
-| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios                                                                                                                                                                       | ✅       |
+| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios. Renderização híbrida: `/login` é estática (SSG) e as páginas internas saem do servidor já com os dados (SSR); veja [Renderização](#renderização)                     | ✅       |
 | Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web/src/components/ui` (como `TabelaResponsiva`, `BarraDeFiltros` e `PainelDeFormulario`) e `components/layout`; `FormularioDeUsuario` e `FormularioDeAvaliacao` servem a cadastro e edição; `Carregando` e botões com `loading` | ✅       |
 | Testes e Docker (diferenciais)                                                                 | `pnpm test` (unidade e integração), `pnpm test:e2e` (Playwright), `docker compose up --build`                                                                                                                                          | ✅       |
 
@@ -163,6 +163,15 @@ curl -s -i -X POST $API/auth/login -H "$JSON" -d '{"usuario":"stanley.hudson","s
 ```
 
 Todo erro volta no formato `application/problem+json` (RFC 9457): `type` (`about:blank`), `title`, `status` e `detail`, mais o `codigo`, que identifica o erro (por exemplo, `USUARIO_JA_EXISTE`), e, nos erros de validação, a lista de `campos` com uma mensagem em português para cada um. O 401 traz também o cabeçalho `WWW-Authenticate: Bearer`.
+
+## Renderização
+
+A Web usa os dois modos do Next, conforme a página:
+
+- **`/login` é estática (SSG):** gerada uma vez no build, não depende de quem a abre.
+- **As páginas internas são renderizadas no servidor (SSR), já com os dados:** o servidor da Web lê o cookie da sessão, busca na API o que a tela vai mostrar (a lista, os indicadores, o gráfico) e entrega o HTML pronto. No navegador, o TanStack Query começa com esses dados no cache (`HydrationBoundary`) e a tela segue interativa: filtrar, paginar e salvar continuam no navegador.
+
+O servidor e o navegador usam as mesmas chaves de cache (`features/*/chaves.ts`) e os mesmos services; o que muda é só o cliente HTTP, que no servidor leva o cookie da requisição. Formulários e filtros são componentes de cliente, porque precisam de interação. No `pnpm build`, a tabela de rotas mostra `○` para a estática e `ƒ` para as renderizadas a cada pedido.
 
 ## Segurança
 

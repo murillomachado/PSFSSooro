@@ -5,7 +5,7 @@ import type {
   Perfil,
   UsuarioResposta,
 } from '@psfssooro/contracts'
-import { http } from '@/lib/http-client.ts'
+import { type ClienteHttp, http } from '@/lib/http-client.ts'
 
 export interface FiltrosDaLista {
   readonly pagina: number
@@ -15,9 +15,9 @@ export interface FiltrosDaLista {
   readonly ativo?: boolean
 }
 
-export async function listarUsuarios(filtros: FiltrosDaLista): Promise<PaginaDeUsuarios> {
+export async function listarUsuarios(filtros: FiltrosDaLista, cliente: ClienteHttp = http): Promise<PaginaDeUsuarios> {
   const params = { ...filtros, busca: filtros.busca === '' ? undefined : filtros.busca }
-  return (await http.get<PaginaDeUsuarios>('/usuarios', { params })).data
+  return (await cliente.get<PaginaDeUsuarios>('/usuarios', { params })).data
 }
 
 export async function obterUsuario(id: string): Promise<UsuarioResposta> {
