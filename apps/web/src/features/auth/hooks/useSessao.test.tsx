@@ -1,4 +1,5 @@
 // @vitest-environment jsdom
+import type { InternalAxiosRequestConfig } from 'axios'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -20,7 +21,7 @@ function SoLeASessao() {
   return null
 }
 
-const respostaDe = (status: number) => (config: Parameters<NonNullable<typeof http.defaults.adapter>>[0]) =>
+const respostaDe = (status: number) => (config: InternalAxiosRequestConfig) =>
   Promise.reject(Object.assign(new Error('401'), { isAxiosError: true, config, response: { status, data: {} } }))
 
 describe('sessão perdida', () => {
