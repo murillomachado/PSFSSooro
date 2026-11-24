@@ -9,6 +9,8 @@ export interface DependenciasDoApp {
   readonly rotasDeAuth: Router
   readonly rotasDeUsuarios: Router
   readonly rotasDeAvaliacoes: Router
+  /** A documentação navegável (OpenAPI), pública. */
+  readonly rotasDaDocumentacao: Router
   readonly registrarErro: (erro: unknown) => void
 }
 
@@ -22,6 +24,7 @@ export function criarApp(dependencias: DependenciasDoApp): Express {
   app.get('/api/health', (_req, res) => {
     res.json({ status: 'ok' })
   })
+  app.use('/api/docs', dependencias.rotasDaDocumentacao)
   app.use('/api/auth', dependencias.rotasDeAuth)
   app.use('/api/usuarios', dependencias.autenticar, dependencias.rotasDeUsuarios)
 
