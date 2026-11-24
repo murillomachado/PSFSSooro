@@ -18,7 +18,13 @@ pnpm --filter @psfssooro/api db:seed          # cria os usuários de demonstraç
 pnpm --filter @psfssooro/api dev              # API em http://localhost:3333
 ```
 
-A Web e o Docker entram aqui nas próximas etapas. Para rodar todos os gates de qualidade: `pnpm verify`.
+Em outro terminal, a Web (abre em http://localhost:3000 e fala com a API em `NEXT_PUBLIC_API_URL`, por padrão `http://localhost:3333/api`):
+
+```bash
+pnpm --filter @psfssooro/web dev
+```
+
+O Docker entra aqui na próxima etapa. Para rodar todos os gates de qualidade: `pnpm verify`.
 
 ### Usuários de demonstração
 
@@ -37,14 +43,14 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 
 ### Requisitos funcionais
 
-| Código | O que a especificação pede                                         | Como ver                                                                      | Situação |
-| ------ | ------------------------------------------------------------------ | ----------------------------------------------------------------------------- | -------- |
-| RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Passos 3 e 4: cadastra e edita usuários dos três perfis                       | ✅ API   |
-| RF2    | Ativar ou inativar um usuário                                      | Passo 5: inativa e reativa um usuário                                         | ✅ API   |
-| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Passo 7: o professor registra uma avaliação; altura e peso viram IMC          | ✅ API   |
-| RF4    | Gravar a classificação do IMC conforme a tabela                    | Passo 7: a resposta traz a classificação (código e descrição)                 | ✅ API   |
-| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | Passo 8: lista com filtro por aluno, professor e período                      | ✅ API   |
-| RF6    | Autenticar com usuário e senha (administrador, professor ou aluno) | Passo 1: entra como `admin`, `prof.paulo` ou `aluno.ana`; senha errada dá 401 | ✅ API   |
+| Código | O que a especificação pede                                         | Como ver                                                                                                                               | Situação |
+| ------ | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| RF1    | Cadastrar usuários com perfil administrador, aluno ou professor    | Passos 3 e 4: cadastra e edita usuários dos três perfis                                                                                | ✅ API   |
+| RF2    | Ativar ou inativar um usuário                                      | Passo 5: inativa e reativa um usuário                                                                                                  | ✅ API   |
+| RF3    | Cadastrar avaliações de IMC, calculadas a partir de altura e peso  | Passo 7: o professor registra uma avaliação; altura e peso viram IMC                                                                   | ✅ API   |
+| RF4    | Gravar a classificação do IMC conforme a tabela                    | Passo 7: a resposta traz a classificação (código e descrição)                                                                          | ✅ API   |
+| RF5    | Consultar as avaliações, com filtro por aluno ou por professor     | Passo 8: lista com filtro por aluno, professor e período                                                                               | ✅ API   |
+| RF6    | Autenticar com usuário e senha (administrador, professor ou aluno) | Na tela de login (http://localhost:3000), entre como `admin`, `prof.paulo` ou `aluno.ana`; senha errada mostra o erro. Na API: passo 1 | ✅       |
 
 ### Regras de negócio
 
@@ -69,7 +75,7 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 | TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                              | ✅       |
 | Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts` | ✅       |
 | Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth`, `usuarios` e `avaliacoes`                         | 🔶       |
-| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`                                                        | ⏳       |
+| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios  | 🔶       |
 | Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web`                                                        | ⏳       |
 | Testes e Docker (diferenciais)                                                                 | testes em cada PR (`pnpm test`); Docker a seguir                  | 🔶       |
 

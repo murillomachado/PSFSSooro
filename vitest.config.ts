@@ -6,7 +6,10 @@ export default defineConfig({
   oxc: { decorator: { legacy: true } },
   resolve: {
     // Nos testes, o contracts vem do código-fonte: não depende do build e entra na cobertura.
-    alias: { '@psfssooro/contracts': path.resolve(import.meta.dirname, 'packages/contracts/src/index.ts') },
+    alias: {
+      '@psfssooro/contracts': path.resolve(import.meta.dirname, 'packages/contracts/src/index.ts'),
+      '@': path.resolve(import.meta.dirname, 'apps/web/src'),
+    },
   },
   test: {
     include: ['{apps,packages}/**/*.test.{ts,tsx}'],
