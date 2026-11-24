@@ -5,7 +5,6 @@ import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { AxiosError, type AxiosResponse } from 'axios'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { tokenStorage } from '@/lib/tokenStorage.ts'
 import { entrar } from '../services/auth.service.ts'
 import { FormularioDeLogin } from './FormularioDeLogin.tsx'
 
@@ -63,7 +62,8 @@ describe('FormularioDeLogin (RF6)', () => {
     await waitFor(() => {
       expect(substituir).toHaveBeenCalledWith('/inicio')
     })
-    expect(tokenStorage.obter()).toBe('tok')
+    // O token fica no cookie httpOnly que a API grava: a página não guarda nada.
+    expect(window.localStorage).toHaveLength(0)
     expect(entrar).toHaveBeenCalledWith({ usuario: 'admin', senha: 'senha1234' })
   })
 
@@ -80,7 +80,6 @@ describe('FormularioDeLogin (RF6)', () => {
     montar()
     await preencherEEnviar('admin', 'errada123')
     expect((await screen.findByRole('alert')).textContent).toContain('Usuário ou senha inválidos.')
-    expect(tokenStorage.obter()).toBeUndefined()
     expect(substituir).not.toHaveBeenCalled()
   })
 })

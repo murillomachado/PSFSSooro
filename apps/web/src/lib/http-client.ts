@@ -1,28 +1,27 @@
 import { problemaSchema } from '@psfssooro/contracts'
 import axios, { isAxiosError } from 'axios'
-import { tokenStorage } from './tokenStorage.ts'
 
-/** Único lugar que importa o Axios: telas e services usam este cliente. */
-export const http = axios.create({ baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333/api' })
+/**
+ * Único lugar que importa o Axios: telas e services usam este cliente. A sessão viaja num cookie
+ * httpOnly que a API grava no login: o navegador o envia sozinho (withCredentials) e o JavaScript
+ * da página nunca vê o token.
+ */
+export const http = axios.create({
+  baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333/api',
+  withCredentials: true,
+})
 
 let aoPerderASessao: (() => void) | undefined
 
-/** Quem cuida da sessão registra aqui o que fazer quando a API recusar o token (401 fora do login). */
+/** Quem cuida da sessão registra aqui o que fazer quando a API recusar a sessão (401 fora do login). */
 export function aoPerderASessaoFazer(acao: (() => void) | undefined): void {
   aoPerderASessao = acao
 }
-
-http.interceptors.request.use((requisicao) => {
-  const credencial = tokenStorage.obter()
-  if (credencial !== undefined) requisicao.headers.Authorization = `Bearer ${credencial}`
-  return requisicao
-})
 
 http.interceptors.response.use(undefined, (erro: unknown) => {
   const url = isAxiosError(erro) ? (erro.config?.url ?? '') : ''
   // No login, 401 significa "usuário ou senha errados" e a tela mostra a mensagem; nos demais, a sessão acabou.
   if (isAxiosError(erro) && erro.response?.status === 401 && !url.endsWith('/auth/login')) {
-    tokenStorage.limpar()
     aoPerderASessao?.()
   }
   return Promise.reject(erro instanceof Error ? erro : new Error('Erro desconhecido'))

@@ -4,14 +4,17 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { cleanup, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { obterSessao } from '@/features/auth/services/auth.service.ts'
-import { tokenStorage } from '@/lib/tokenStorage.ts'
+import { obterSessao, sairDaSessao } from '@/features/auth/services/auth.service.ts'
 import { sistema } from '@/theme/sistema.ts'
 import LayoutAutenticado from './layout.tsx'
 
 const substituir = vi.fn()
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: substituir }), usePathname: () => '/inicio' }))
-vi.mock('@/features/auth/services/auth.service.ts', () => ({ entrar: vi.fn(), obterSessao: vi.fn() }))
+vi.mock('@/features/auth/services/auth.service.ts', () => ({
+  entrar: vi.fn(),
+  obterSessao: vi.fn(),
+  sairDaSessao: vi.fn(),
+}))
 
 const PAULO = {
   id: '2',
@@ -37,23 +40,22 @@ function montar() {
 
 describe('área autenticada', () => {
   beforeEach(() => {
-    window.localStorage.clear()
     substituir.mockReset()
     vi.mocked(obterSessao).mockReset()
+    vi.mocked(sairDaSessao).mockReset().mockResolvedValue(undefined)
   })
   afterEach(cleanup)
 
-  it('sem token, manda para o login e não mostra o conteúdo', async () => {
+  it('sem sessão válida (a API recusa o cookie), volta para o login e não mostra o conteúdo', async () => {
+    vi.mocked(obterSessao).mockRejectedValue(new Error('401'))
     montar()
     await waitFor(() => {
       expect(substituir).toHaveBeenCalledWith('/login')
     })
     expect(screen.queryByText('conteúdo protegido')).toBeNull()
-    expect(obterSessao).not.toHaveBeenCalled()
   })
 
-  it('com token válido, mostra quem está logado e o menu do perfil, e Sair apaga a sessão', async () => {
-    tokenStorage.salvar('tok')
+  it('com sessão, mostra quem está logado e o menu do perfil, e Sair encerra a sessão na API', async () => {
     vi.mocked(obterSessao).mockResolvedValue(PAULO)
     montar()
     expect(await screen.findByText('conteúdo protegido')).toBeDefined()
@@ -63,17 +65,9 @@ describe('área autenticada', () => {
     const usuario = userEvent.setup()
     await usuario.click(screen.getByRole('button', { name: 'Menu do usuário' }))
     await usuario.click(await screen.findByRole('menuitem', { name: 'Sair' }))
-    expect(tokenStorage.obter()).toBeUndefined()
-    expect(substituir).toHaveBeenCalledWith('/login')
-  })
-
-  it('com token recusado pela API, volta para o login', async () => {
-    tokenStorage.salvar('vencido')
-    vi.mocked(obterSessao).mockRejectedValue(new Error('401'))
-    montar()
     await waitFor(() => {
       expect(substituir).toHaveBeenCalledWith('/login')
     })
-    expect(screen.queryByText('conteúdo protegido')).toBeNull()
+    expect(sairDaSessao).toHaveBeenCalledOnce()
   })
 })

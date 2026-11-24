@@ -16,6 +16,7 @@ const esquema = z.object({
   JWT_SECRET: z.string({ error: 'é obrigatório' }).min(32, 'precisa ter pelo menos 32 caracteres'),
   JWT_EXPIRES_IN_SECONDS: inteiro(28_800, 60, 604_800),
   CORS_ORIGIN: z.string().min(1).default('http://localhost:3000'),
+  COOKIE_SEGURO: z.enum(['true', 'false'], 'use true ou false').default('false'),
 })
 
 export interface Env {
@@ -25,6 +26,8 @@ export interface Env {
   readonly segredoJwt: string
   readonly expiracaoDoTokenEmSegundos: number
   readonly origemCors: string
+  /** O cookie da sessão só trafega por HTTPS. */
+  readonly cookieSeguro: boolean
 }
 
 /** Lê e valida as variáveis de ambiente. A API não sobe com configuração faltando ou inválida. */
@@ -42,5 +45,6 @@ export function carregarEnv(origem: Readonly<Record<string, string | undefined>>
     segredoJwt: dados.JWT_SECRET,
     expiracaoDoTokenEmSegundos: dados.JWT_EXPIRES_IN_SECONDS,
     origemCors: dados.CORS_ORIGIN,
+    cookieSeguro: dados.COOKIE_SEGURO === 'true',
   }
 }

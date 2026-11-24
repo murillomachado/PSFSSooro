@@ -28,7 +28,7 @@ pnpm --filter @psfssooro/api db:seed          # cria os usuários de demonstraç
 pnpm --filter @psfssooro/api dev              # API em http://localhost:3333
 ```
 
-Em outro terminal, na mesma pasta, a Web, que abre em http://localhost:3000. Ela fala com a API em `NEXT_PUBLIC_API_URL`, que já vale `http://localhost:3333/api` sem configuração; para mudar, copie `apps/web/.env.example` para `apps/web/.env.local`:
+Em outro terminal, na mesma pasta, a Web, que abre em http://localhost:3000. Ela fala com a API em `NEXT_PUBLIC_API_URL`, que já vale `http://localhost:3333/api` sem configuração; para mudar, copie `apps/web/.env.example` para `apps/web/.env.local`. O servidor da Web também consulta a API para conferir a sessão antes de cada página; o endereço que ele usa é o mesmo, salvo se `API_URL_INTERNA` disser outro:
 
 ```bash
 pnpm --filter @psfssooro/web dev
@@ -111,7 +111,8 @@ API=http://localhost:3333/api
 JSON='Content-Type: application/json'
 pegar_token() { curl -s -X POST $API/auth/login -H "$JSON" -d "{\"usuario\":\"$1\",\"senha\":\"senha1234\"}" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).token"; }
 
-# 1. Entrar (RF6)
+# 1. Entrar (RF6): o token vem no corpo, para o cabeçalho Authorization. A mesma resposta grava o cookie
+#    httpOnly `sessao`, que é o que a Web usa.
 TOKEN=$(pegar_token michael.scott)
 
 # 2. Listar os usuários (só administrador e professor)
@@ -149,9 +150,20 @@ curl -s -i -X DELETE $API/avaliacoes/AV -H "Authorization: Bearer $TOKEN"       
 
 # 10. Excluir usuário (RN1): só sem avaliações
 curl -s -i -X DELETE $API/usuarios/$PAM -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
+
+# 11. Limite de tentativas: 5 senhas erradas para o mesmo usuário bloqueiam o login dele por 15 minutos
+for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code} " -X POST $API/auth/login -H "$JSON" -d '{"usuario":"stanley.hudson","senha":"errada123"}'; done   # 401 ×5
+curl -s -i -X POST $API/auth/login -H "$JSON" -d '{"usuario":"stanley.hudson","senha":"senha1234"}'   # 429, com Retry-After
 ```
 
 Todo erro volta no formato `application/problem+json` (RFC 9457), com `status`, `codigo` e, nos erros de validação, a lista de `campos`.
+
+## Segurança
+
+- **Sessão num cookie httpOnly** (`sessao`, `SameSite=Lax`, 8 horas): o JavaScript da página nunca vê o token, então um script injetado não consegue roubá-lo. A API também aceita o token no cabeçalho `Authorization: Bearer`, para o `curl` e a documentação. **Sair** pede à API que apague o cookie.
+- **Páginas protegidas no servidor:** antes de cada página, o servidor da Web confere a sessão na API e redireciona quem não está logado (para o login) ou não tem o perfil da página (para o início). A API confere tudo de novo em cada chamada.
+- **Limite de tentativas de login:** 5 senhas erradas para o mesmo usuário, a partir do mesmo endereço, em 15 minutos, bloqueiam o login dele até a janela acabar (429, com `Retry-After`). Logins certos não contam, e os outros usuários seguem entrando. Reiniciar a API (`docker compose restart api`) zera os bloqueios.
+- Senhas com scrypt, cabeçalhos de segurança com `helmet` e CORS liberado só para a Web. Em produção, com HTTPS, use `COOKIE_SEGURO=true` (veja `apps/api/.env.example`).
 
 ## Decisões
 

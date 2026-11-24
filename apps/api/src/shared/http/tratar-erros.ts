@@ -1,6 +1,6 @@
 import type { Problema } from '@psfssooro/contracts'
 import type { ErrorRequestHandler, RequestHandler, Response } from 'express'
-import { EntradaInvalida, ErroDeDominio, NaoEncontrado } from '../errors/erros.ts'
+import { EntradaInvalida, ErroDeDominio, MuitasTentativas, NaoEncontrado } from '../errors/erros.ts'
 
 const PROBLEM_JSON = 'application/problem+json'
 
@@ -32,6 +32,7 @@ function erroDeRequisicao(erro: unknown): ErroDeDominio | undefined {
 }
 
 function responder(res: Response, erro: ErroDeDominio): void {
+  if (erro instanceof MuitasTentativas) res.set('Retry-After', String(erro.segundosParaTentarDeNovo))
   res.status(erro.status).type(PROBLEM_JSON).json(paraProblema(erro))
 }
 

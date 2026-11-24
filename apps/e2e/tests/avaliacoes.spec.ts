@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { entrarComSucesso, linhaCom } from './apoio.ts'
+import { entrarComSucesso, linhaCom, sair } from './apoio.ts'
 
 const hoje = (): string => new Date().toISOString().slice(0, 10)
 
@@ -101,6 +101,7 @@ test.describe('RF3, RF4, RF5, RN2, RN3, RN5, RN6, RN7 e RN9: avaliações', () =
     await entrarComSucesso(page, 'pam.beesly')
     await expect(page.getByRole('heading', { name: 'Evolução do IMC' })).toBeVisible()
     await expect(pontos).toHaveCount(6)
+    await sair(page)
 
     await entrarComSucesso(page, 'michael.scott')
     await page.goto('/avaliacoes')

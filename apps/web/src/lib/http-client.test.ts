@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { AxiosError, type AxiosAdapter, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { aoPerderASessaoFazer, http, mensagemDeErro } from './http-client.ts'
-import { tokenStorage } from './tokenStorage.ts'
 
 const PROBLEMA = {
   type: 'about:blank',
@@ -21,31 +20,29 @@ function responderCom(status: number, dados: unknown): AxiosAdapter {
 }
 
 describe('http-client', () => {
-  beforeEach(() => {
-    window.localStorage.clear()
-  })
   afterEach(() => {
     aoPerderASessaoFazer(undefined)
   })
 
-  it('envia o token guardado no cabeçalho Authorization', async () => {
-    tokenStorage.salvar('meu-token')
+  it('envia o cookie da sessão em toda chamada e não guarda token no navegador', async () => {
+    let comCookie: unknown
     let cabecalho: unknown
     await http.get('/auth/me', {
       adapter: (config) => {
+        comCookie = config.withCredentials
         cabecalho = config.headers.Authorization
         return responderCom(200, {})(config)
       },
     })
-    expect(cabecalho).toBe('Bearer meu-token')
+    expect(comCookie).toBe(true)
+    expect(cabecalho).toBeUndefined()
+    expect(window.localStorage).toHaveLength(0)
   })
 
-  it('perde a sessão num 401 fora do login: apaga o token e avisa quem cuida da sessão', async () => {
-    tokenStorage.salvar('vencido')
+  it('perde a sessão num 401 fora do login: avisa quem cuida da sessão', async () => {
     const aviso = vi.fn()
     aoPerderASessaoFazer(aviso)
     await expect(http.get('/usuarios', { adapter: responderCom(401, PROBLEMA) })).rejects.toThrow()
-    expect(tokenStorage.obter()).toBeUndefined()
     expect(aviso).toHaveBeenCalledOnce()
   })
 

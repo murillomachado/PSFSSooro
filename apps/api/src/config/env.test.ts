@@ -12,6 +12,7 @@ describe('carregarEnv', () => {
       segredoJwt: SEGREDO,
       expiracaoDoTokenEmSegundos: 28_800,
       origemCors: 'http://localhost:3000',
+      cookieSeguro: false,
     })
   })
 

@@ -95,3 +95,68 @@ describe('RN8: usuário inativo não acessa o sistema', () => {
     expect((volta.body as UsuarioResposta).ativo).toBe(true)
   })
 })
+
+describe('sessão em cookie httpOnly', () => {
+  let ambiente: Ambiente
+
+  beforeAll(async () => {
+    ambiente = await criarAmbiente()
+  })
+  afterAll(async () => {
+    await ambiente.banco.destroy()
+  })
+
+  const cookieDaSessao = (resposta: request.Response): string => {
+    const cabecalho = resposta.headers['set-cookie'] as unknown as string[] | undefined
+    return cabecalho?.find((cookie) => cookie.startsWith('sessao=')) ?? ''
+  }
+
+  it('o login grava o token num cookie que o JavaScript da página não lê, e o cookie sozinho autentica', async () => {
+    const resposta = await request(ambiente.app).post(URL_LOGIN).send({ usuario: 'pam.beesly', senha: SENHA_DEMO })
+    const cookie = cookieDaSessao(resposta)
+    expect(cookie).toMatch(/HttpOnly/)
+    expect(cookie).toMatch(/SameSite=Lax/)
+    expect(cookie).toMatch(/Max-Age=3600/)
+    const sessao = await request(ambiente.app)
+      .get(URL_ME)
+      .set('Cookie', cookie.split(';')[0] ?? '')
+    expect(sessao.status).toBe(200)
+    expect(sessao.body).toMatchObject({ usuario: 'pam.beesly' })
+  })
+
+  it('sair apaga o cookie', async () => {
+    const resposta = await request(ambiente.app).post('/api/auth/logout')
+    expect(resposta.status).toBe(204)
+    expect(cookieDaSessao(resposta)).toMatch(/^sessao=;.*Expires=Thu, 01 Jan 1970/)
+  })
+})
+
+describe('limite de tentativas de login', () => {
+  let ambiente: Ambiente
+  const login = (usuario: string, senha: string) => request(ambiente.app).post(URL_LOGIN).send({ usuario, senha })
+
+  beforeEach(async () => {
+    ambiente = await criarAmbiente()
+  })
+  afterEach(async () => {
+    await ambiente.banco.destroy()
+  })
+
+  it('depois de 5 senhas erradas para o mesmo usuário, bloqueia com 429, mesmo com a senha certa', async () => {
+    for (let tentativa = 0; tentativa < 5; tentativa += 1) {
+      expect((await login('kevin.malone', 'senha-errada')).status).toBe(401)
+    }
+    const bloqueada = await login('kevin.malone', SENHA_DEMO)
+    expect(bloqueada.status).toBe(429)
+    expect((bloqueada.body as Problema).codigo).toBe('MUITAS_TENTATIVAS')
+    expect(Number(bloqueada.headers['retry-after'])).toBeGreaterThan(0)
+    // O bloqueio é do usuário atacado, não da academia inteira.
+    expect((await login('pam.beesly', SENHA_DEMO)).status).toBe(200)
+  })
+
+  it('logins certos não contam como tentativa', async () => {
+    for (let tentativa = 0; tentativa < 8; tentativa += 1) {
+      expect((await login('pam.beesly', SENHA_DEMO)).status).toBe(200)
+    }
+  })
+})

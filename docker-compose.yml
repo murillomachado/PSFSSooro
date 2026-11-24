@@ -34,6 +34,9 @@ services:
       dockerfile: apps/web/Dockerfile
       args:
         NEXT_PUBLIC_API_URL: http://localhost:3333/api
+    environment:
+      # O servidor da Web confere a sessão chamando a API pela rede interna do compose.
+      API_URL_INTERNA: http://api:3333/api
     ports:
       - '3000:3000'
     depends_on:
