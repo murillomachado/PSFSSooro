@@ -1,34 +1,28 @@
-'use client'
+import { Precarregado } from '@/components/ui/Precarregado.tsx'
+import { sessaoNoServidor } from '@/features/auth/servidor.ts'
+import { PRIMEIRA_PAGINA } from '@/features/avaliacoes/chaves.ts'
+import { TelaDeAvaliacoes } from '@/features/avaliacoes/components/TelaDeAvaliacoes.tsx'
+import { precarregarAvaliacoes, precarregarEvolucao } from '@/features/avaliacoes/precarregar.ts'
+import { precarregarEscolha } from '@/features/usuarios/precarregar.ts'
+import { clienteDaRequisicao } from '@/lib/servidor.ts'
 
-import { Button } from '@chakra-ui/react'
-import Link from 'next/link'
-import { LuPlus } from 'react-icons/lu'
-import { CabecalhoDePagina } from '@/components/ui/CabecalhoDePagina.tsx'
-import { Carregando } from '@/components/ui/Carregando.tsx'
-import { useSessao } from '@/features/auth/hooks/useSessao.ts'
-import { ListaDeAvaliacoes } from '@/features/avaliacoes/components/ListaDeAvaliacoes.tsx'
-
-export default function PaginaDeAvaliacoes() {
-  const { usuario } = useSessao()
-  if (usuario === undefined) return <Carregando />
-  const ehAluno = usuario.perfil === 'ALUNO'
+export default async function PaginaDeAvaliacoes() {
+  const [usuario, cliente] = await Promise.all([sessaoNoServidor(), clienteDaRequisicao()])
   return (
-    <>
-      <CabecalhoDePagina
-        titulo={ehAluno ? 'Minhas avaliações' : 'Avaliações'}
-        descricao={ehAluno ? 'O histórico das suas avaliações de IMC.' : 'As avaliações de IMC dos alunos.'}
-        acao={
-          !ehAluno && (
-            <Button asChild>
-              <Link href="/avaliacoes/nova">
-                <LuPlus />
-                Nova avaliação
-              </Link>
-            </Button>
-          )
-        }
-      />
-      <ListaDeAvaliacoes ator={{ id: usuario.id, perfil: usuario.perfil }} />
-    </>
+    <Precarregado
+      preparar={async (consultas) => {
+        if (usuario === undefined) return
+        // O que a lista pede ao abrir: a primeira página e, conforme o perfil, o gráfico ou os filtros.
+        await Promise.all([
+          precarregarAvaliacoes(consultas, cliente, PRIMEIRA_PAGINA),
+          usuario.perfil === 'ALUNO'
+            ? precarregarEvolucao(consultas, cliente, usuario.id)
+            : precarregarEscolha(consultas, cliente, 'ALUNO'),
+          usuario.perfil === 'ADMINISTRADOR' ? precarregarEscolha(consultas, cliente, 'PROFESSOR') : undefined,
+        ])
+      }}
+    >
+      <TelaDeAvaliacoes />
+    </Precarregado>
   )
 }

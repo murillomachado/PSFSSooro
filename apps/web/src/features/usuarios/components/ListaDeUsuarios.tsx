@@ -9,13 +9,14 @@ import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
 import { Paginacao } from '@/components/ui/Paginacao.tsx'
 import { mensagemDeErro } from '@/lib/http-client.ts'
 import { usePaginaValida } from '@/lib/usePaginaValida.ts'
+import { PRIMEIRA_PAGINA } from '../chaves.ts'
 import { useAlterarSituacao, useExcluirUsuario, useListaDeUsuarios } from '../hooks/useUsuarios.ts'
 import type { FiltrosDaLista } from '../services/usuarios.service.ts'
 import { FiltrosDeUsuarios } from './FiltrosDeUsuarios.tsx'
 import { TabelaDeUsuarios } from './TabelaDeUsuarios.tsx'
 
 export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfil }>) {
-  const [filtros, definirFiltros] = useState<FiltrosDaLista>({ pagina: 1 })
+  const [filtros, definirFiltros] = useState<FiltrosDaLista>(PRIMEIRA_PAGINA)
   const [paraExcluir, definirParaExcluir] = useState<UsuarioResposta | undefined>(undefined)
   const lista = useListaDeUsuarios(filtros)
   const situacao = useAlterarSituacao()

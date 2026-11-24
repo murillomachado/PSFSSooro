@@ -1,21 +1,18 @@
-'use client'
+import { Precarregado } from '@/components/ui/Precarregado.tsx'
+import { sessaoNoServidor } from '@/features/auth/servidor.ts'
+import { TelaInicial } from '@/features/inicio/components/TelaInicial.tsx'
+import { precarregarInicio } from '@/features/inicio/precarregar.ts'
+import { clienteDaRequisicao } from '@/lib/servidor.ts'
 
-import { CabecalhoDePagina } from '@/components/ui/CabecalhoDePagina.tsx'
-import { Carregando } from '@/components/ui/Carregando.tsx'
-import { useSessao } from '@/features/auth/hooks/useSessao.ts'
-import { PainelInicial } from '@/features/inicio/components/PainelInicial.tsx'
-import { NOME_DO_PERFIL } from '@/features/usuarios/perfis.ts'
-
-export default function PaginaInicial() {
-  const { usuario } = useSessao()
-  if (usuario === undefined) return <Carregando />
+export default async function PaginaInicial() {
+  const [usuario, cliente] = await Promise.all([sessaoNoServidor(), clienteDaRequisicao()])
   return (
-    <>
-      <CabecalhoDePagina
-        titulo={`Olá, ${usuario.nome}`}
-        descricao={`Você entrou como ${NOME_DO_PERFIL[usuario.perfil].toLowerCase()}.`}
-      />
-      <PainelInicial usuario={usuario} />
-    </>
+    <Precarregado
+      preparar={async (consultas) => {
+        if (usuario !== undefined) await precarregarInicio(consultas, cliente, usuario)
+      }}
+    >
+      <TelaInicial />
+    </Precarregado>
   )
 }

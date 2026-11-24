@@ -13,6 +13,7 @@ import { useUsuariosParaEscolha } from '@/features/usuarios/hooks/useUsuarios.ts
 import { mensagemDeErro } from '@/lib/http-client.ts'
 import { usePaginaValida } from '@/lib/usePaginaValida.ts'
 import type { Ator } from '../ator.ts'
+import { PRIMEIRA_PAGINA } from '../chaves.ts'
 import { GraficoDeEvolucao } from '../evolucao/GraficoDeEvolucao.tsx'
 import { useExcluirAvaliacao, useListaDeAvaliacoes } from '../hooks/useAvaliacoes.ts'
 import type { FiltrosDeAvaliacoes } from '../services/avaliacoes.service.ts'
@@ -39,7 +40,7 @@ function ConviteAoGrafico() {
 }
 
 export function ListaDeAvaliacoes({ ator }: Readonly<{ ator: Ator }>) {
-  const [filtros, definirFiltros] = useState<FiltrosDeAvaliacoes>({ pagina: 1 })
+  const [filtros, definirFiltros] = useState<FiltrosDeAvaliacoes>(PRIMEIRA_PAGINA)
   const [paraExcluir, definirParaExcluir] = useState<AvaliacaoResposta | undefined>(undefined)
   const lista = useListaDeAvaliacoes(filtros)
   const exclusao = useExcluirAvaliacao()

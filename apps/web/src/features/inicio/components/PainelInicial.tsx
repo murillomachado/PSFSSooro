@@ -7,6 +7,7 @@ import { LuActivity, LuClipboardList, LuPlus, LuUserCheck, LuUsers } from 'react
 import { GraficoDeEvolucao } from '@/features/avaliacoes/evolucao/GraficoDeEvolucao.tsx'
 import { useListaDeAvaliacoes } from '@/features/avaliacoes/hooks/useAvaliacoes.ts'
 import { useListaDeUsuarios } from '@/features/usuarios/hooks/useUsuarios.ts'
+import { filtrosDoPainel } from '../filtros.ts'
 import { Indicador } from './Indicador.tsx'
 
 const GRADE = { base: 1, sm: 2, lg: 3 } as const
@@ -14,10 +15,10 @@ const GRADE = { base: 1, sm: 2, lg: 3 } as const
 /** Administrador e professor: quantos alunos e avaliações existem (o total que a paginação da API já traz). */
 function IndicadoresDaEquipe({ usuario }: Readonly<{ usuario: UsuarioResposta }>) {
   const ehAdmin = usuario.perfil === 'ADMINISTRADOR'
-  const usuarios = useListaDeUsuarios({ pagina: 1, limite: 1 })
-  const alunosAtivos = useListaDeUsuarios({ pagina: 1, limite: 1, perfil: 'ALUNO', ativo: true })
-  const avaliacoes = useListaDeAvaliacoes({ pagina: 1 })
-  const minhas = useListaDeAvaliacoes({ pagina: 1, professorId: usuario.id })
+  const usuarios = useListaDeUsuarios(filtrosDoPainel.usuarios)
+  const alunosAtivos = useListaDeUsuarios(filtrosDoPainel.alunosAtivos)
+  const avaliacoes = useListaDeAvaliacoes(filtrosDoPainel.avaliacoes)
+  const minhas = useListaDeAvaliacoes(filtrosDoPainel.feitasPor(usuario.id))
   return (
     <SimpleGrid columns={GRADE} gap="4">
       <Indicador rotulo="Alunos ativos" valor={alunosAtivos.data?.total} icone={LuUserCheck} />

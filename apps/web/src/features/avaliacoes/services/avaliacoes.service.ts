@@ -5,7 +5,7 @@ import type {
   FaixaImcResposta,
   PaginaDeAvaliacoes,
 } from '@psfssooro/contracts'
-import { http } from '@/lib/http-client.ts'
+import { type ClienteHttp, http } from '@/lib/http-client.ts'
 
 export interface FiltrosDeAvaliacoes {
   readonly pagina: number
@@ -19,13 +19,16 @@ export interface FiltrosDeAvaliacoes {
   readonly ate?: string
 }
 
-export async function listarAvaliacoes(filtros: FiltrosDeAvaliacoes): Promise<PaginaDeAvaliacoes> {
-  return (await http.get<PaginaDeAvaliacoes>('/avaliacoes', { params: filtros })).data
+export async function listarAvaliacoes(
+  filtros: FiltrosDeAvaliacoes,
+  cliente: ClienteHttp = http,
+): Promise<PaginaDeAvaliacoes> {
+  return (await cliente.get<PaginaDeAvaliacoes>('/avaliacoes', { params: filtros })).data
 }
 
 /** A tabela de classificação do IMC, como a API a define. */
-export async function listarFaixasImc(): Promise<FaixaImcResposta[]> {
-  return (await http.get<FaixaImcResposta[]>('/avaliacoes/faixas')).data
+export async function listarFaixasImc(cliente: ClienteHttp = http): Promise<FaixaImcResposta[]> {
+  return (await cliente.get<FaixaImcResposta[]>('/avaliacoes/faixas')).data
 }
 
 export async function obterAvaliacao(id: string): Promise<AvaliacaoResposta> {

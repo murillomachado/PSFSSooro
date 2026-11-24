@@ -7,7 +7,7 @@ import { useCallback, useEffect } from 'react'
 import { aoPerderASessaoFazer } from '@/lib/http-client.ts'
 import { entrar, obterSessao, sairDaSessao } from '../services/auth.service.ts'
 
-const CHAVE_DA_SESSAO = ['sessao'] as const
+import { CHAVE_DA_SESSAO } from '../chaves.ts'
 
 export interface Sessao {
   /** Enquanto a API não responde quem está logado, ainda não se sabe se há sessão. */
@@ -20,7 +20,7 @@ export interface Sessao {
 export function useSessao(): Sessao {
   const roteador = useRouter()
   const clienteDeConsultas = useQueryClient()
-  const consulta = useQuery({ queryKey: CHAVE_DA_SESSAO, queryFn: obterSessao, retry: false })
+  const consulta = useQuery({ queryKey: CHAVE_DA_SESSAO, queryFn: () => obterSessao(), retry: false })
 
   const sair = useCallback(() => {
     // Mesmo que a API não responda, a tela volta ao login; o cookie expira sozinho.

@@ -1,5 +1,5 @@
 import { problemaSchema } from '@psfssooro/contracts'
-import axios, { isAxiosError } from 'axios'
+import axios, { type AxiosInstance, isAxiosError } from 'axios'
 
 /**
  * Único lugar que importa o Axios: telas e services usam este cliente. A sessão viaja num cookie
@@ -10,6 +10,20 @@ export const http = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333/api',
   withCredentials: true,
 })
+
+/** O que os services de leitura precisam de um cliente HTTP: no navegador é o `http`; no servidor, o de baixo. */
+export type ClienteHttp = Pick<AxiosInstance, 'get'>
+
+/**
+ * No servidor da Web, a chamada não sai do navegador: vai pelo endereço interno da API (no Docker,
+ * `http://api:3333/api`) e leva o cookie da sessão que chegou com a requisição da página.
+ */
+export function clienteDoServidor(cookieDaSessao: string | undefined): ClienteHttp {
+  return axios.create({
+    baseURL: process.env.API_URL_INTERNA ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3333/api',
+    headers: cookieDaSessao === undefined ? {} : { Cookie: `sessao=${cookieDaSessao}` },
+  })
+}
 
 let aoPerderASessao: (() => void) | undefined
 

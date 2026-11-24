@@ -1,26 +1,20 @@
-'use client'
+import type { ReactNode } from 'react'
+import { AreaAutenticada } from '@/components/layout/AreaAutenticada.tsx'
+import { Precarregado } from '@/components/ui/Precarregado.tsx'
+import { CHAVE_DA_SESSAO } from '@/features/auth/chaves.ts'
+import { sessaoNoServidor } from '@/features/auth/servidor.ts'
 
-import { useRouter } from 'next/navigation'
-import { type ReactNode, useEffect } from 'react'
-import { AppShell } from '@/components/layout/AppShell.tsx'
-import { Carregando } from '@/components/ui/Carregando.tsx'
-import { useSairAoPerderASessao, useSessao } from '@/features/auth/hooks/useSessao.ts'
-
-/** Tudo que fica dentro deste grupo exige sessão: sem ela, vai para o login. */
-export default function LayoutAutenticado({ children }: { readonly children: ReactNode }) {
-  const { carregando, usuario, sair } = useSessao()
-  const roteador = useRouter()
-  useSairAoPerderASessao(sair)
-
-  useEffect(() => {
-    if (!carregando && usuario === undefined) roteador.replace('/login')
-  }, [carregando, usuario, roteador])
-
-  if (usuario === undefined) return <Carregando />
-
+/** No servidor: quem está logado já vem no cache, e a casca (menu, nome, perfil) sai pronta no HTML. */
+export default async function LayoutAutenticado({ children }: { readonly children: ReactNode }) {
+  const usuario = await sessaoNoServidor()
   return (
-    <AppShell usuario={usuario} aoSair={sair}>
-      {children}
-    </AppShell>
+    <Precarregado
+      preparar={async (consultas) => {
+        if (usuario !== undefined) consultas.setQueryData(CHAVE_DA_SESSAO, usuario)
+        return Promise.resolve()
+      }}
+    >
+      <AreaAutenticada>{children}</AreaAutenticada>
+    </Precarregado>
   )
 }
