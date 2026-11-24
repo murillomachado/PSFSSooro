@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { criarBanco, type DataSource } from './data-source.ts'
 
-const TABELAS = "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'usuarios'"
+const TABELAS = "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('usuarios', 'avaliacoes')"
 
 describe('migrations', () => {
   let banco: DataSource
@@ -15,14 +15,15 @@ describe('migrations', () => {
   })
 
   it('sobem, descem e sobem de novo, com o banco sempre consistente', async () => {
-    expect(await banco.runMigrations()).toHaveLength(1)
-    expect(await banco.query(TABELAS)).toHaveLength(1)
+    expect(await banco.runMigrations()).toHaveLength(2)
+    expect(await banco.query(TABELAS)).toHaveLength(2)
 
+    await banco.undoLastMigration()
     await banco.undoLastMigration()
     expect(await banco.query(TABELAS)).toHaveLength(0)
 
-    expect(await banco.runMigrations()).toHaveLength(1)
-    expect(await banco.query(TABELAS)).toHaveLength(1)
+    expect(await banco.runMigrations()).toHaveLength(2)
+    expect(await banco.query(TABELAS)).toHaveLength(2)
   })
 
   it('o banco recusa o que as regras não permitem: perfil inválido e usuário repetido', async () => {

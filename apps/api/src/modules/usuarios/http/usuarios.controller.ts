@@ -9,6 +9,7 @@ import { atorDe, idDaRota } from '../../../shared/http/locais.ts'
 import type { AlterarSituacao } from '../application/alterar-situacao.ts'
 import type { CriarUsuario } from '../application/criar-usuario.ts'
 import type { EditarUsuario } from '../application/editar-usuario.ts'
+import type { ExcluirUsuario } from '../application/excluir-usuario.ts'
 import type { ListarUsuarios } from '../application/listar-usuarios.ts'
 import type { ObterUsuario } from '../application/obter-usuario.ts'
 import { paginaParaResposta, paraResposta } from './usuario.presenter.ts'
@@ -19,6 +20,7 @@ export interface CasosDeUsoDeUsuarios {
   readonly criar: CriarUsuario
   readonly editar: EditarUsuario
   readonly alterarSituacao: AlterarSituacao
+  readonly excluir: ExcluirUsuario
 }
 
 /** Só HTTP: lê a requisição já validada, chama o caso de uso e devolve a resposta. Nenhuma regra mora aqui. */
@@ -47,5 +49,10 @@ export class UsuariosController {
   alterarSituacao = async (req: Request, res: Response): Promise<void> => {
     const { ativo } = req.body as SituacaoEntrada
     res.json(paraResposta(await this.casos.alterarSituacao.executar(atorDe(res), idDaRota(res), ativo)))
+  }
+
+  excluir = async (_req: Request, res: Response): Promise<void> => {
+    await this.casos.excluir.executar(atorDe(res), idDaRota(res))
+    res.status(204).end()
   }
 }

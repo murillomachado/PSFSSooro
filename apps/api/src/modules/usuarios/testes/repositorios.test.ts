@@ -72,6 +72,28 @@ describe.each([
     expect(await repositorio().contarAdministradoresAtivos()).toBe(1)
   })
 
+  it('acha vários usuários de uma vez pelos ids, ignorando os que não existem', async () => {
+    const ana = novoUsuario({ usuario: 'aluno.ana' })
+    const bruno = novoUsuario({ usuario: 'aluno.bruno' })
+    await repositorio().salvar(ana)
+    await repositorio().salvar(bruno)
+    const achados = await repositorio().buscarPorIds([ana.id, 'inexistente', bruno.id])
+    expect(achados.map((usuario) => usuario.id).toSorted((a, b) => a.localeCompare(b))).toEqual(
+      [ana.id, bruno.id].toSorted((a, b) => a.localeCompare(b)),
+    )
+    expect(await repositorio().buscarPorIds([])).toEqual([])
+  })
+
+  it('exclui um usuário e deixa os outros', async () => {
+    const ana = novoUsuario({ usuario: 'aluno.ana' })
+    const bruno = novoUsuario({ usuario: 'aluno.bruno' })
+    await repositorio().salvar(ana)
+    await repositorio().salvar(bruno)
+    await repositorio().excluir(ana.id)
+    expect(await repositorio().buscarPorId(ana.id)).toBeUndefined()
+    expect(await repositorio().buscarPorId(bruno.id)).toEqual(bruno)
+  })
+
   describe('listar', () => {
     beforeEach(async () => {
       await repositorio().salvar(administrador({ nome: 'Zélia Admin', usuario: 'admin' }))

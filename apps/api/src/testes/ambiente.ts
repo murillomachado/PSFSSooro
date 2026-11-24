@@ -4,6 +4,7 @@ import type { Express } from 'express'
 import request, { type Test } from 'supertest'
 import type { Env } from '../config/env.ts'
 import { montarApp } from '../container.ts'
+import { TypeOrmAvaliacaoRepository } from '../modules/avaliacoes/infra/typeorm-avaliacao.repository.ts'
 import { TypeOrmUsuarioRepository } from '../modules/usuarios/infra/typeorm-usuario.repository.ts'
 import { SENHA_DEMO, semear } from '../seed/semear.ts'
 import { criarBancoEmMemoria } from '../shared/database/banco-em-memoria.ts'
@@ -26,6 +27,7 @@ export interface ClienteAutenticado {
   post(url: string): Test
   put(url: string): Test
   patch(url: string): Test
+  delete(url: string): Test
 }
 
 export interface Ambiente {
@@ -42,7 +44,8 @@ export interface Ambiente {
 export async function criarAmbiente(): Promise<Ambiente> {
   const banco = await criarBancoEmMemoria()
   const usuarios = new TypeOrmUsuarioRepository(banco)
-  await semear({ usuarios, hasher: new HasherScrypt(), relogio: relogioDoSistema, gerarId: randomUUID })
+  const avaliacoes = new TypeOrmAvaliacaoRepository(banco)
+  await semear({ usuarios, avaliacoes, hasher: new HasherScrypt(), relogio: relogioDoSistema, gerarId: randomUUID })
   const app = montarApp(ENV_DE_TESTE, banco)
 
   const como = (token: string): ClienteAutenticado => {
@@ -52,6 +55,7 @@ export async function criarAmbiente(): Promise<Ambiente> {
       post: (url) => autenticar(request(app).post(url)),
       put: (url) => autenticar(request(app).put(url)),
       patch: (url) => autenticar(request(app).patch(url)),
+      delete: (url) => autenticar(request(app).delete(url)),
     }
   }
 

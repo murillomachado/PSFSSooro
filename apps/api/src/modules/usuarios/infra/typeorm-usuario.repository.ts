@@ -1,4 +1,4 @@
-import { type DataSource, QueryFailedError, type Repository } from 'typeorm'
+import { type DataSource, In, QueryFailedError, type Repository } from 'typeorm'
 import type { PaginaDe } from '../../../shared/paginacao.ts'
 import { usuarioJaExiste } from '../application/regras-compartilhadas.ts'
 import type { FiltrosDeUsuario, UsuarioRepository } from '../application/usuario-repository.ts'
@@ -22,6 +22,15 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
   async buscarPorUsuario(usuario: string): Promise<Usuario | undefined> {
     const entidade = await this.repositorio.findOneBy({ usuario })
     return entidade === null ? undefined : paraDominio(entidade)
+  }
+
+  async buscarPorIds(ids: readonly string[]): Promise<Usuario[]> {
+    if (ids.length === 0) return []
+    return (await this.repositorio.findBy({ id: In([...ids]) })).map(paraDominio)
+  }
+
+  async excluir(id: string): Promise<void> {
+    await this.repositorio.delete({ id })
   }
 
   async listar(filtros: FiltrosDeUsuario): Promise<PaginaDe<Usuario>> {

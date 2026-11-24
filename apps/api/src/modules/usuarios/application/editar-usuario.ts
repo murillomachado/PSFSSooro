@@ -1,16 +1,18 @@
 import type { EditarUsuarioEntrada } from '@psfssooro/contracts'
-import { RegraDeNegocio, SemPermissao } from '../../../shared/errors/erros.ts'
+import { Conflito, RegraDeNegocio, SemPermissao } from '../../../shared/errors/erros.ts'
 import type { Ator } from '../../../shared/security/ator.ts'
 import type { HasherDeSenha, Relogio } from '../../../shared/security/portas.ts'
 import type { Usuario } from '../domain/usuario.ts'
 import { garantirUsuarioLivre, localizarVisivel } from './regras-compartilhadas.ts'
 import type { UsuarioRepository } from './usuario-repository.ts'
+import type { VinculosDoUsuario } from './vinculos.ts'
 
 export class EditarUsuario {
   constructor(
     private readonly usuarios: UsuarioRepository,
     private readonly hasher: HasherDeSenha,
     private readonly relogio: Relogio,
+    private readonly vinculos: VinculosDoUsuario,
   ) {}
 
   async executar(ator: Ator, id: string, entrada: EditarUsuarioEntrada): Promise<Usuario> {
@@ -38,6 +40,10 @@ export class EditarUsuario {
     }
     if (alvo.perfil === 'ADMINISTRADOR' && alvo.ativo && (await this.usuarios.contarAdministradoresAtivos()) <= 1) {
       throw new RegraDeNegocio('O último administrador ativo não pode mudar de perfil.', 'ULTIMO_ADMINISTRADOR')
+    }
+    // Quem já tem avaliações como aluno ou professor perderia o sentido delas ao mudar de perfil (D8).
+    if (await this.vinculos.possuiAvaliacoes(alvo.id)) {
+      throw new Conflito('Este usuário tem avaliações vinculadas e não pode mudar de perfil.', 'USUARIO_COM_AVALIACOES')
     }
   }
 }

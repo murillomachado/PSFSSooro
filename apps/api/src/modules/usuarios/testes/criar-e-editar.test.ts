@@ -11,6 +11,7 @@ import {
   novoUsuario,
   relogioFixo,
   repositorioCom,
+  semVinculos,
 } from './apoio.ts'
 
 const cadastro = { nome: 'Bruno Lima', usuario: 'aluno.bruno', senha: 'senha1234', perfil: 'ALUNO' as const }
@@ -58,7 +59,7 @@ describe('EditarUsuario', () => {
 
   const montar = async (...existentes: Parameters<typeof repositorioCom>) => {
     const repositorio = await repositorioCom(...existentes)
-    return { repositorio, editar: new EditarUsuario(repositorio, hasherFalso, relogioFixo(DEPOIS)) }
+    return { repositorio, editar: new EditarUsuario(repositorio, hasherFalso, relogioFixo(DEPOIS), semVinculos) }
   }
 
   it('altera só o que foi informado e atualiza a data de alteração', async () => {
@@ -100,6 +101,17 @@ describe('EditarUsuario', () => {
     })
     const comOutro = await montar(administrador(), administrador({ id: 'admin-2', usuario: 'admin2' }))
     expect((await comOutro.editar.executar(ADMIN, ADMIN.id, { perfil: 'PROFESSOR' })).perfil).toBe('PROFESSOR')
+  })
+
+  it('não troca o perfil de quem já tem avaliações vinculadas (409)', async () => {
+    const repositorio = await repositorioCom(administrador(), ana)
+    const comVinculos = { possuiAvaliacoes: (id: string) => Promise.resolve(id === ana.id) }
+    const editar = new EditarUsuario(repositorio, hasherFalso, relogioFixo(DEPOIS), comVinculos)
+    await expect(editar.executar(ADMIN, ana.id, { perfil: 'PROFESSOR' })).rejects.toMatchObject({
+      status: 409,
+      codigo: 'USUARIO_COM_AVALIACOES',
+    })
+    expect((await editar.executar(ADMIN, ana.id, { nome: 'Ana Maria' })).nome).toBe('Ana Maria')
   })
 
   it('responde "não encontrado" para um usuário que não existe', async () => {
