@@ -1,20 +1,20 @@
-# PSFSSooro
+# SooroFit
 
 **SooroFit**: sistema web para uma academia acompanhar a evolução do IMC dos alunos, com três perfis de acesso: administrador, professor e aluno. Alunos e professores são cadastrados, os professores registram avaliações de IMC e as avaliações podem ser consultadas para acompanhar a evolução. A interface é responsiva (no celular, as listas viram cartões) e tem tema claro e escuro, no botão da barra superior.
 
-Monorepo pnpm: `apps/api` (Express 5, TypeORM 1, SQLite), `apps/web` (Next.js 16, Chakra UI 3), `apps/e2e` (testes de ponta a ponta com Playwright) e `packages/contracts` (schemas zod compartilhados pelos dois).
+Monorepo pnpm: `apps/api` (Express 5, TypeORM 1, SQLite), `apps/web` (Next.js 16, Chakra UI 3), `apps/e2e` (testes de ponta a ponta com Playwright) e `packages/contracts` (schemas zod compartilhados pela API e pela Web).
 
 ## Como executar
 
 ### Com Docker (o caminho mais curto)
 
-Com o Docker instalado, uma linha sobe a API, a Web e o banco já com os usuários de demonstração:
+Com o Docker instalado (Docker Desktop, ou Docker Engine com o Compose v2) e as portas 3000 e 3333 livres, uma linha sobe a API, a Web e o banco, já com as migrations aplicadas e os usuários de demonstração:
 
 ```bash
 docker compose up --build
 ```
 
-Depois, abra **http://localhost:3000** (a API fica em http://localhost:3333). O banco fica no volume `banco` e sobrevive a reinícios; `docker compose down -v` apaga tudo. O `JWT_SECRET` do compose é de demonstração.
+O primeiro build leva de um a dois minutos. Quando as linhas de `web-1` mostrarem `Ready`, abra **http://localhost:3000** e entre com um dos [usuários de demonstração](#usuários-de-demonstração) (a API fica em http://localhost:3333). O banco fica no volume `banco` e sobrevive a reinícios; `docker compose down -v` para tudo e apaga o banco. O `JWT_SECRET` do compose é de demonstração.
 
 ### Sem Docker
 
@@ -28,17 +28,19 @@ pnpm --filter @psfssooro/api db:seed          # cria os usuários de demonstraç
 pnpm --filter @psfssooro/api dev              # API em http://localhost:3333
 ```
 
-Em outro terminal, a Web (abre em http://localhost:3000 e fala com a API em `NEXT_PUBLIC_API_URL`, por padrão `http://localhost:3333/api`):
+Em outro terminal, na mesma pasta, a Web, que abre em http://localhost:3000. Ela fala com a API em `NEXT_PUBLIC_API_URL`, que já vale `http://localhost:3333/api` sem configuração; para mudar, copie `apps/web/.env.example` para `apps/web/.env.local`:
 
 ```bash
 pnpm --filter @psfssooro/web dev
 ```
 
-Para rodar todos os gates de qualidade: `pnpm verify`. Os testes de ponta a ponta (sobem a API e a Web sozinhos, com um banco novo) rodam com `pnpm test:e2e`; na primeira vez, instale o navegador: `pnpm --filter @psfssooro/e2e exec playwright install chromium`.
+Abra **http://localhost:3000** e entre com um dos usuários abaixo.
+
+Para rodar todos os gates de qualidade: `pnpm verify`. Os testes de ponta a ponta (sobem a API e a Web sozinhos, com um banco novo) rodam com `pnpm test:e2e`, com as portas 3000 e 3333 livres (pare antes o Docker ou os servidores de `dev`); na primeira vez, instale o navegador: `pnpm --filter @psfssooro/e2e exec playwright install chromium`.
 
 ### Usuários de demonstração
 
-Todos com a senha `senha1234`.
+Todos com a senha `senha1234`. O menu muda conforme o perfil: o administrador vê **Usuários** e **Avaliações**; o professor, **Alunos** e **Avaliações**; o aluno, **Minhas avaliações**.
 
 | Usuário                                                                         | Perfil        | Situação                                                    |
 | ------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------- |
@@ -49,7 +51,7 @@ Todos com a senha `senha1234`.
 
 ## Como testar os requisitos
 
-Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. Todos os requisitos funcionam na tela e na API. A coluna "Como ver" diz o caminho na tela; os passos de [Testando a API](#testando-a-api) mostram o mesmo pela API.
+Situação: ✅ funcionando. Todos os requisitos funcionam na tela e na API. A coluna "Como ver" diz o caminho na tela; os passos de [Testando a API](#testando-a-api) mostram o mesmo pela API.
 
 ### Requisitos funcionais
 
@@ -73,7 +75,7 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. Todos os requisitos
 | RN5    | Professor cadastra e edita avaliações                                                         | Como `dwight.schrute`: registra e **Editar** só as próprias; nas de `jim.halpert` não há botão (e a API devolve 403)                   | ✅       |
 | RN6    | Professor consulta as avaliações de seus alunos                                               | Como `dwight.schrute`, **Avaliações** lista as avaliações de todos os alunos                                                           | ✅       |
 | RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `pam.beesly`, **Minhas avaliações** mostra só as dela, sem ações                                                                  | ✅       |
-| RN8    | Usuário inativo não acessa o sistema                                                          | Passo 5: o usuário inativado perde o acesso na hora. `ryan.howard` recebe 403                                                          | ✅       |
+| RN8    | Usuário inativo não acessa o sistema                                                          | Na tela de login, `ryan.howard` vê "Este usuário está inativo". Quem é inativado perde o acesso na hora (passo 5 da API: 403)          | ✅       |
 | RN9    | Usuário inativo não pode ter novas avaliações                                                 | No formulário só aparecem alunos e professores ativos; `ryan.howard` não pode ser escolhido (a API também recusa, 422)                 | ✅       |
 
 ### Exigências técnicas
@@ -91,7 +93,7 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. Todos os requisitos
 
 ## Testando a API
 
-Estes passos exercitam os mesmos requisitos direto na API, com `curl`, em um terminal bash (Linux, macOS, WSL ou Git Bash). Com a API no ar (veja [Como executar](#como-executar)):
+Estes passos exercitam os mesmos requisitos direto na API, com `curl`, em um terminal bash (Linux, macOS, WSL ou Git Bash). Precisam do `curl` e do Node.js (usado só para ler o JSON das respostas). Com a API no ar (veja [Como executar](#como-executar)), rode os comandos na ordem, no mesmo terminal:
 
 ```bash
 API=http://localhost:3333/api
