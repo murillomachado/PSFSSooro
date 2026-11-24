@@ -4,6 +4,7 @@ import { criarApp } from './app.ts'
 import type { Env } from './config/env.ts'
 import { AutenticarUsuario } from './modules/auth/application/autenticar-usuario.ts'
 import { ObterSessao } from './modules/auth/application/obter-sessao.ts'
+import { CAMINHOS_DE_AUTH } from './modules/auth/http/auth.openapi.ts'
 import { AuthController } from './modules/auth/http/auth.controller.ts'
 import { criarRotasDeAuth } from './modules/auth/http/auth.routes.ts'
 import { ListarAvaliacoes, ObterAvaliacao } from './modules/avaliacoes/application/consultar-avaliacoes.ts'
@@ -11,6 +12,7 @@ import { EditarAvaliacao } from './modules/avaliacoes/application/editar-avaliac
 import { ExcluirAvaliacao } from './modules/avaliacoes/application/excluir-avaliacao.ts'
 import { RegistrarAvaliacao } from './modules/avaliacoes/application/registrar-avaliacao.ts'
 import { AvaliacoesController } from './modules/avaliacoes/http/avaliacoes.controller.ts'
+import { CAMINHOS_DE_AVALIACOES } from './modules/avaliacoes/http/avaliacoes.openapi.ts'
 import { criarRotasDeAvaliacoes } from './modules/avaliacoes/http/avaliacoes.routes.ts'
 import { TypeOrmAvaliacaoRepository } from './modules/avaliacoes/infra/typeorm-avaliacao.repository.ts'
 import { AlterarSituacao } from './modules/usuarios/application/alterar-situacao.ts'
@@ -20,10 +22,12 @@ import { ExcluirUsuario } from './modules/usuarios/application/excluir-usuario.t
 import { ListarUsuarios } from './modules/usuarios/application/listar-usuarios.ts'
 import { ObterUsuario } from './modules/usuarios/application/obter-usuario.ts'
 import { UsuariosController } from './modules/usuarios/http/usuarios.controller.ts'
+import { CAMINHOS_DE_USUARIOS } from './modules/usuarios/http/usuarios.openapi.ts'
 import { criarRotasDeUsuarios } from './modules/usuarios/http/usuarios.routes.ts'
 import { TypeOrmUsuarioRepository } from './modules/usuarios/infra/typeorm-usuario.repository.ts'
 import type { DataSource } from './shared/database/data-source.ts'
 import { autenticar, type ProvedorDeAtor } from './shared/http/autenticar.ts'
+import { criarRotasDaDocumentacao, documentoOpenApi } from './shared/http/documentacao.ts'
 import { HasherScrypt } from './shared/security/hasher-scrypt.ts'
 import { relogioDoSistema } from './shared/security/relogio.ts'
 import { TokenJwt } from './shared/security/token-jwt.ts'
@@ -70,6 +74,9 @@ export function montarApp(env: Env, banco: DataSource): Express {
     rotasDeAuth: criarRotasDeAuth(authController, autenticarRequisicao),
     rotasDeUsuarios: criarRotasDeUsuarios(usuariosController),
     rotasDeAvaliacoes: criarRotasDeAvaliacoes(avaliacoesController),
+    rotasDaDocumentacao: criarRotasDaDocumentacao(
+      documentoOpenApi([CAMINHOS_DE_AUTH, CAMINHOS_DE_USUARIOS, CAMINHOS_DE_AVALIACOES]),
+    ),
     registrarErro: (erro) => {
       console.error(erro)
     },
