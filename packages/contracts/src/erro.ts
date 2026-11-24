@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+/** Mensagem para quando o corpo da requisição nem chega a ser um objeto JSON. */
+export const CORPO_JSON = 'Envie os dados em JSON'
+
 /** Erro no formato da RFC 9457 (Problem Details), que a API devolve em toda resposta de erro. */
 export const problemaSchema = z.object({
   type: z.string(),

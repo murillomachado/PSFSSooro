@@ -6,7 +6,8 @@ const PROBLEM_JSON = 'application/problem+json'
 
 function paraProblema(erro: ErroDeDominio): Problema {
   const base = {
-    type: `/erros/${erro.codigo.toLowerCase().replaceAll('_', '-')}`,
+    // RFC 9457: sem uma página por tipo de erro, o `type` é about:blank; quem distingue os erros é o `codigo`.
+    type: 'about:blank',
     title: erro.titulo,
     status: erro.status,
     detail: erro.message,
@@ -32,6 +33,8 @@ function erroDeRequisicao(erro: unknown): ErroDeDominio | undefined {
 }
 
 function responder(res: Response, erro: ErroDeDominio): void {
+  // RFC 9110: o 401 diz ao cliente como se autenticar.
+  if (erro.status === 401) res.set('WWW-Authenticate', 'Bearer')
   res.status(erro.status).type(PROBLEM_JSON).json(paraProblema(erro))
 }
 

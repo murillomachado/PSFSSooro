@@ -50,3 +50,18 @@ describe('editarAvaliacaoSchema e listarAvaliacoesQuerySchema', () => {
     expect(listarAvaliacoesQuerySchema.safeParse({ de: 'ontem' }).success).toBe(false)
   })
 })
+
+describe('mensagens de campos ausentes', () => {
+  it('cada campo obrigatório que falta tem a própria mensagem, em português', () => {
+    const resultado = criarAvaliacaoSchema.safeParse({})
+    expect(resultado.error?.issues.map((problema) => problema.message)).toEqual([
+      'Escolha o aluno',
+      'Informe uma data válida (AAAA-MM-DD)',
+      'Informe a altura',
+      'Informe o peso',
+    ])
+    expect(criarAvaliacaoSchema.safeParse(undefined).error?.issues.map((p) => p.message)).toEqual([
+      'Envie os dados em JSON',
+    ])
+  })
+})

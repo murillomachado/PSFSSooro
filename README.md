@@ -151,7 +151,7 @@ curl -s -i -X DELETE $API/avaliacoes/AV -H "Authorization: Bearer $TOKEN"       
 curl -s -i -X DELETE $API/usuarios/$PAM -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
 ```
 
-Todo erro volta no formato `application/problem+json` (RFC 9457), com `status`, `codigo` e, nos erros de validação, a lista de `campos`.
+Todo erro volta no formato `application/problem+json` (RFC 9457): `type` (`about:blank`), `title`, `status` e `detail`, mais o `codigo`, que identifica o erro (por exemplo, `USUARIO_JA_EXISTE`), e, nos erros de validação, a lista de `campos` com uma mensagem em português para cada um. O 401 traz também o cabeçalho `WWW-Authenticate: Bearer`.
 
 ## Decisões
 

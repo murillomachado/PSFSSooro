@@ -5,7 +5,7 @@ export const LIMITE_MAXIMO = 100
 
 /** Número inteiro vindo de texto (query string). Sem z.coerce, que transformaria texto vazio em 0. */
 const inteiroDeTexto = z
-  .string()
+  .string('Informe um número inteiro')
   .regex(/^\d+$/, 'Informe um número inteiro')
   .transform((texto) => Number(texto))
 
