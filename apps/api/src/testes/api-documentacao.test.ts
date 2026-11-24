@@ -15,6 +15,7 @@ interface DocumentoOpenApi {
 /** Todas as rotas da API, no formato do OpenAPI: nenhuma pode faltar na documentação. */
 const ROTAS = [
   'post /api/auth/login',
+  'post /api/auth/logout',
   'get /api/auth/me',
   'get /api/usuarios',
   'post /api/usuarios',

@@ -45,4 +45,22 @@ test.describe('RF6 e RN8: autenticação', () => {
     await page.goto('/usuarios')
     await expect(page).toHaveURL(/\/login$/)
   })
+
+  test('a sessão fica num cookie httpOnly: o JavaScript da página não enxerga o token', async ({ page, context }) => {
+    await entrarComSucesso(page, 'michael.scott')
+    const sessao = (await context.cookies()).find((cookie) => cookie.name === 'sessao')
+    expect(sessao?.httpOnly).toBe(true)
+    expect(await page.evaluate(() => document.cookie)).not.toContain('sessao')
+    expect(await page.evaluate(() => window.localStorage.length)).toBe(0)
+  })
+
+  test('cinco senhas erradas bloqueiam o login daquele usuário, até com a senha certa', async ({ page }) => {
+    for (let tentativa = 0; tentativa < 5; tentativa += 1) {
+      await entrar(page, 'andy.bernard', 'senha-errada')
+      await expect(page.getByText('Usuário ou senha inválidos.')).toBeVisible()
+    }
+    await entrar(page, 'andy.bernard')
+    await expect(page.getByText(/Muitas tentativas de login/)).toBeVisible()
+    await expect(page).toHaveURL(/\/login$/)
+  })
 })

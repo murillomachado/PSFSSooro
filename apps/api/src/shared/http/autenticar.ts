@@ -3,6 +3,7 @@ import { NaoAutenticado } from '../errors/erros.ts'
 import type { Ator } from '../security/ator.ts'
 import type { VerificadorDeToken } from '../security/portas.ts'
 import { definirAtor } from './locais.ts'
+import { tokenDoCookie } from './sessao.ts'
 
 /** Descobre o ator de um usuário. Devolve undefined se ele não existe ou está inativo. */
 export interface ProvedorDeAtor {
@@ -16,11 +17,12 @@ function extrairBearer(cabecalho: string | undefined): string | undefined {
 
 /**
  * Exige um token válido e relê o usuário a cada requisição: quem foi inativado perde o acesso
- * na hora, sem esperar o token expirar.
+ * na hora, sem esperar o token expirar. O token vem do cookie da sessão (a Web) ou do cabeçalho
+ * `Authorization: Bearer` (curl, Swagger e outros clientes da API).
  */
 export function autenticar(verificador: VerificadorDeToken, provedor: ProvedorDeAtor): RequestHandler {
   return async (req, res, next) => {
-    const token = extrairBearer(req.headers.authorization)
+    const token = extrairBearer(req.headers.authorization) ?? tokenDoCookie(req)
     const usuarioId = token === undefined ? undefined : verificador.verificar(token)
     const ator = usuarioId === undefined ? undefined : await provedor.buscarAtor(usuarioId)
     if (ator === undefined) {

@@ -19,6 +19,7 @@ export const ENV_DE_TESTE: Env = {
   segredoJwt: 'um-segredo-de-teste-com-mais-de-trinta-e-dois-caracteres',
   expiracaoDoTokenEmSegundos: 3600,
   origemCors: 'http://localhost:3000',
+  cookieSeguro: false,
 }
 
 /** Chamadas HTTP já autenticadas com um token. */

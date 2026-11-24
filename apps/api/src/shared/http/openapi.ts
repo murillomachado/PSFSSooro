@@ -30,6 +30,7 @@ const ERROS = new Map([
   [404, 'Não encontrado'],
   [409, 'Conflito com o estado atual'],
   [422, 'Regra de negócio não atendida'],
+  [429, 'Muitas tentativas: espere o tempo do cabeçalho Retry-After'],
 ])
 
 const PROBLEMA = { content: { 'application/problem+json': { schema: { $ref: '#/components/schemas/Problema' } } } }

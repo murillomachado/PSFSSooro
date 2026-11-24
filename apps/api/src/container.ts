@@ -28,6 +28,7 @@ import { TypeOrmUsuarioRepository } from './modules/usuarios/infra/typeorm-usuar
 import type { DataSource } from './shared/database/data-source.ts'
 import { autenticar, type ProvedorDeAtor } from './shared/http/autenticar.ts'
 import { criarRotasDaDocumentacao, documentoOpenApi } from './shared/http/documentacao.ts'
+import { limitarTentativasDeLogin } from './shared/http/limitar-tentativas.ts'
 import { HasherScrypt } from './shared/security/hasher-scrypt.ts'
 import { relogioDoSistema } from './shared/security/relogio.ts'
 import { TokenJwt } from './shared/security/token-jwt.ts'
@@ -51,7 +52,14 @@ export function montarApp(env: Env, banco: DataSource): Express {
   }
   const autenticarRequisicao = autenticar(tokens, provedorDeAtor)
 
-  const authController = new AuthController(new AutenticarUsuario(usuarios, hasher, tokens), new ObterSessao(usuarios))
+  const authController = new AuthController(
+    new AutenticarUsuario(usuarios, hasher, tokens),
+    new ObterSessao(usuarios),
+    {
+      validadeEmSegundos: env.expiracaoDoTokenEmSegundos,
+      seguro: env.cookieSeguro,
+    },
+  )
   const usuariosController = new UsuariosController({
     listar: new ListarUsuarios(usuarios),
     obter: new ObterUsuario(usuarios),
@@ -71,7 +79,7 @@ export function montarApp(env: Env, banco: DataSource): Express {
   return criarApp({
     origemCors: env.origemCors,
     autenticar: autenticarRequisicao,
-    rotasDeAuth: criarRotasDeAuth(authController, autenticarRequisicao),
+    rotasDeAuth: criarRotasDeAuth(authController, autenticarRequisicao, limitarTentativasDeLogin()),
     rotasDeUsuarios: criarRotasDeUsuarios(usuariosController),
     rotasDeAvaliacoes: criarRotasDeAvaliacoes(avaliacoesController),
     rotasDaDocumentacao: criarRotasDaDocumentacao(

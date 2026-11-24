@@ -60,3 +60,13 @@ export class RegraDeNegocio extends ErroDeDominio {
     super(422, codigo, 'Regra de negócio violada', detalhe)
   }
 }
+
+export class MuitasTentativas extends ErroDeDominio {
+  /** Quanto falta para poder tentar de novo, para o cabeçalho Retry-After. */
+  readonly segundosParaTentarDeNovo: number
+
+  constructor(detalhe: string, segundosParaTentarDeNovo: number) {
+    super(429, 'MUITAS_TENTATIVAS', 'Muitas tentativas', detalhe)
+    this.segundosParaTentarDeNovo = segundosParaTentarDeNovo
+  }
+}
