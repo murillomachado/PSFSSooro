@@ -15,29 +15,39 @@ const COM_SINAL = new Intl.NumberFormat('pt-BR', {
   signDisplay: 'exceptZero',
 })
 
-/** Os números do topo: onde o aluno está hoje e quanto mudou desde a primeira avaliação. */
+/** Quanto mudou desde a primeira avaliação, em destaque, com a data dela. */
+function Variacao({ valor, unidade, desde }: Readonly<{ valor: number; unidade: string; desde: string | undefined }>) {
+  if (desde === undefined) return <Stat.HelpText>primeira avaliação</Stat.HelpText>
+  return (
+    <Stat.HelpText>
+      <Text as="span" fontWeight="600" color="fg">
+        {COM_SINAL.format(valor)}
+        {unidade}
+      </Text>{' '}
+      desde {desde}
+    </Stat.HelpText>
+  )
+}
+
+/** Os números do topo: onde o aluno está hoje e quanto mudou, lado a lado também no celular. */
 function Resumo({ evolucao }: Readonly<{ evolucao: Evolucao }>) {
   const { atual, pontos, variacaoImc, variacaoPeso } = evolucao
   if (atual === undefined) return null
-  const desde = pontos.length > 1 ? `desde ${pontos[0]?.data ?? ''}` : 'primeira avaliação'
+  const desde = pontos.length > 1 ? pontos[0]?.rotulo : undefined
   return (
-    <SimpleGrid columns={{ base: 1, sm: 3 }} gap="4" mb="5">
-      <Stat.Root>
+    <SimpleGrid columns={2} gap={{ base: '4', md: '8' }} mb="5" maxW={{ md: '2xl' }}>
+      <Stat.Root gap="1">
         <Stat.Label>IMC atual</Stat.Label>
         <Stat.ValueText>{formatarImc(atual.imc)}</Stat.ValueText>
-        <Badge alignSelf="flex-start" colorPalette={corDaFaixa(atual.codigoDaFaixa)} variant="subtle">
+        <Variacao valor={variacaoImc} unidade="" desde={desde} />
+        <Badge alignSelf="flex-start" mt="1" colorPalette={corDaFaixa(atual.codigoDaFaixa)} variant="subtle">
           {atual.faixa}
         </Badge>
       </Stat.Root>
-      <Stat.Root>
-        <Stat.Label>Variação do IMC</Stat.Label>
-        <Stat.ValueText>{COM_SINAL.format(variacaoImc)}</Stat.ValueText>
-        <Stat.HelpText>{desde}</Stat.HelpText>
-      </Stat.Root>
-      <Stat.Root>
+      <Stat.Root gap="1">
         <Stat.Label>Peso atual</Stat.Label>
         <Stat.ValueText>{formatarPeso(atual.pesoKg)}</Stat.ValueText>
-        <Stat.HelpText>{COM_SINAL.format(variacaoPeso)} kg</Stat.HelpText>
+        <Variacao valor={variacaoPeso} unidade=" kg" desde={desde} />
       </Stat.Root>
     </SimpleGrid>
   )
