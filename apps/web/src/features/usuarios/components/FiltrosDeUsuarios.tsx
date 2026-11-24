@@ -1,8 +1,8 @@
 'use client'
 
 import { perfilSchema } from '@psfssooro/contracts'
-import { Button, Flex } from '@chakra-ui/react'
-import { type SubmitEvent, useState } from 'react'
+import { useState } from 'react'
+import { BarraDeFiltros } from '@/components/ui/BarraDeFiltros.tsx'
 import { CampoDeSelecao } from '@/components/ui/CampoDeSelecao.tsx'
 import { CampoDeTexto } from '@/components/ui/CampoDeTexto.tsx'
 import { OPCOES_DE_PERFIL } from '../perfis.ts'
@@ -27,8 +27,7 @@ export function FiltrosDeUsuarios({ mostrarPerfil, aoFiltrar }: Readonly<Filtros
   const [perfil, definirPerfil] = useState('')
   const [situacao, definirSituacao] = useState('')
 
-  const enviar = (evento: SubmitEvent<HTMLFormElement>) => {
-    evento.preventDefault()
+  const filtrar = () => {
     const perfilEscolhido = perfilSchema.safeParse(perfil)
     aoFiltrar({
       busca: busca.trim(),
@@ -36,38 +35,41 @@ export function FiltrosDeUsuarios({ mostrarPerfil, aoFiltrar }: Readonly<Filtros
       ...(situacao === '' ? {} : { ativo: situacao === 'true' }),
     })
   }
+  const limpar = () => {
+    definirBusca('')
+    definirPerfil('')
+    definirSituacao('')
+    aoFiltrar({})
+  }
 
   return (
-    <form onSubmit={enviar}>
-      <Flex gap="3" align="flex-end" wrap="wrap" mb="4">
-        <CampoDeTexto
-          rotulo="Buscar por nome ou usuário"
-          erro={undefined}
-          value={busca}
-          onChange={(e) => {
-            definirBusca(e.target.value)
-          }}
-        />
-        {mostrarPerfil && (
-          <CampoDeSelecao
-            rotulo="Perfil"
-            opcoes={OPCOES_DO_FILTRO_DE_PERFIL}
-            value={perfil}
-            onChange={(e) => {
-              definirPerfil(e.target.value)
-            }}
-          />
-        )}
+    <BarraDeFiltros aoFiltrar={filtrar} aoLimpar={limpar}>
+      <CampoDeTexto
+        rotulo="Buscar por nome ou usuário"
+        erro={undefined}
+        value={busca}
+        onChange={(e) => {
+          definirBusca(e.target.value)
+        }}
+      />
+      {mostrarPerfil && (
         <CampoDeSelecao
-          rotulo="Situação"
-          opcoes={OPCOES_DE_SITUACAO}
-          value={situacao}
+          rotulo="Perfil"
+          opcoes={OPCOES_DO_FILTRO_DE_PERFIL}
+          value={perfil}
           onChange={(e) => {
-            definirSituacao(e.target.value)
+            definirPerfil(e.target.value)
           }}
         />
-        <Button type="submit">Filtrar</Button>
-      </Flex>
-    </form>
+      )}
+      <CampoDeSelecao
+        rotulo="Situação"
+        opcoes={OPCOES_DE_SITUACAO}
+        value={situacao}
+        onChange={(e) => {
+          definirSituacao(e.target.value)
+        }}
+      />
+    </BarraDeFiltros>
   )
 }

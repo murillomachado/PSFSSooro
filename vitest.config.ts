@@ -15,6 +15,7 @@ export default defineConfig({
     include: ['{apps,packages}/**/*.test.{ts,tsx}'],
     // Antes de existir código de produto, uma suíte vazia não é erro.
     passWithNoTests: true,
+    setupFiles: ['apps/web/src/testes/configurar.ts'],
     coverage: {
       provider: 'v8',
       // Todo o código de produto conta, inclusive arquivo que nenhum teste importa.

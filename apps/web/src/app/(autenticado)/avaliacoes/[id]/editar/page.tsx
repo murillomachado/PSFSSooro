@@ -1,9 +1,10 @@
 'use client'
 
-import { Heading } from '@chakra-ui/react'
 import { useParams, useRouter } from 'next/navigation'
 import { Carregando } from '@/components/ui/Carregando.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
+import { avisarSucesso } from '@/components/ui/Avisos.tsx'
+import { PainelDeFormulario } from '@/components/ui/PainelDeFormulario.tsx'
 import { RotaDePerfil } from '@/components/ui/RotaDePerfil.tsx'
 import { useSessao } from '@/features/auth/hooks/useSessao.ts'
 import { FormularioComOpcoes } from '@/features/avaliacoes/components/FormularioComOpcoes.tsx'
@@ -19,26 +20,30 @@ export default function PaginaDeEdicaoDeAvaliacao() {
 
   return (
     <RotaDePerfil perfis={['ADMINISTRADOR', 'PROFESSOR']}>
-      <Heading size="lg" mb="4">
-        Editar avaliação
-      </Heading>
-      {alvo.isError && <MensagemDeErro mensagem={mensagemDeErro(alvo.error)} />}
-      {alvo.isPending && <Carregando />}
-      {alvo.data !== undefined && usuario !== undefined && (
-        <FormularioComOpcoes
-          avaliacao={alvo.data}
-          perfilDoAtor={usuario.perfil}
-          enviando={edicao.isPending}
-          erro={edicao.error === null ? undefined : mensagemDeErro(edicao.error)}
-          aoEnviar={(dados) => {
-            edicao.mutate(dados, {
-              onSuccess: () => {
-                roteador.push('/avaliacoes')
-              },
-            })
-          }}
-        />
-      )}
+      <PainelDeFormulario
+        titulo="Editar avaliação"
+        descricao="Corrija as medidas ou a data: o IMC é recalculado."
+        voltarPara="/avaliacoes"
+      >
+        {alvo.isError && <MensagemDeErro mensagem={mensagemDeErro(alvo.error)} />}
+        {alvo.isPending && <Carregando />}
+        {alvo.data !== undefined && usuario !== undefined && (
+          <FormularioComOpcoes
+            avaliacao={alvo.data}
+            perfilDoAtor={usuario.perfil}
+            enviando={edicao.isPending}
+            erro={edicao.error === null ? undefined : mensagemDeErro(edicao.error)}
+            aoEnviar={(dados) => {
+              edicao.mutate(dados, {
+                onSuccess: () => {
+                  avisarSucesso('Avaliação atualizada')
+                  roteador.push('/avaliacoes')
+                },
+              })
+            }}
+          />
+        )}
+      </PainelDeFormulario>
     </RotaDePerfil>
   )
 }

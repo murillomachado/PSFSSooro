@@ -2,6 +2,7 @@
 
 import type { AvaliacaoResposta } from '@psfssooro/contracts'
 import { useCallback, useState } from 'react'
+import { avisarSucesso } from '@/components/ui/Avisos.tsx'
 import { Carregando } from '@/components/ui/Carregando.tsx'
 import { DialogoDeConfirmacao } from '@/components/ui/DialogoDeConfirmacao.tsx'
 import { MensagemDeErro } from '@/components/ui/MensagemDeErro.tsx'
@@ -47,6 +48,9 @@ export function ListaDeAvaliacoes({ ator }: Readonly<{ ator: Ator }>) {
     if (paraExcluir === undefined) return
     exclusao.reset()
     exclusao.mutate(paraExcluir.id, {
+      onSuccess: () => {
+        avisarSucesso('Avaliação excluída')
+      },
       onSettled: () => {
         definirParaExcluir(undefined)
       },

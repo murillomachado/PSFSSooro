@@ -71,7 +71,7 @@ export function FormularioDeUsuario({
         })(evento)
       }}
     >
-      <Stack gap="4" maxW="md">
+      <Stack gap="4">
         {erro !== undefined && <MensagemDeErro mensagem={erro} />}
         <CampoDeTexto rotulo="Nome" erro={errors.nome?.message} {...register('nome')} />
         <CampoDeTexto
@@ -95,7 +95,7 @@ export function FormularioDeUsuario({
             {...register('perfil')}
           />
         )}
-        <Button type="submit" loading={enviando}>
+        <Button type="submit" loading={enviando} alignSelf={{ sm: 'flex-end' }}>
           {edicao ? 'Salvar alterações' : 'Cadastrar'}
         </Button>
       </Stack>

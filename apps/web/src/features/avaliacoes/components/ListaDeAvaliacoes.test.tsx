@@ -2,6 +2,7 @@
 import type { AvaliacaoResposta } from '@psfssooro/contracts'
 import { cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { listarUsuarios } from '@/features/usuarios/services/usuarios.service.ts'
 import { renderizar, USUARIO_EXEMPLO } from '@/testes/renderizar.tsx'
@@ -9,7 +10,11 @@ import { excluirAvaliacao, listarAvaliacoes } from '../services/avaliacoes.servi
 import { ListaDeAvaliacoes } from './ListaDeAvaliacoes.tsx'
 
 vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: string }) => <a href={href}>{children}</a>,
+  default: ({ href, children, ...resto }: { href: string; children: ReactNode }) => (
+    <a href={href} {...resto}>
+      {children}
+    </a>
+  ),
 }))
 vi.mock('../services/avaliacoes.service.ts', () => ({ listarAvaliacoes: vi.fn(), excluirAvaliacao: vi.fn() }))
 vi.mock('@/features/usuarios/services/usuarios.service.ts', () => ({ listarUsuarios: vi.fn() }))

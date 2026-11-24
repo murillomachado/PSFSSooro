@@ -6,7 +6,7 @@ import {
   criarAvaliacaoSchema,
   type Perfil,
 } from '@psfssooro/contracts'
-import { Button, Stack, Text } from '@chakra-ui/react'
+import { Button, SimpleGrid, Stack, Text } from '@chakra-ui/react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { type Resolver, useForm } from 'react-hook-form'
 import { z } from 'zod'
@@ -94,7 +94,7 @@ export function FormularioDeAvaliacao(props: Readonly<FormularioDeAvaliacaoProps
         })(evento)
       }}
     >
-      <Stack gap="4" maxW="md">
+      <Stack gap="4">
         {erro !== undefined && <MensagemDeErro mensagem={erro} />}
         {alunoEditavel ? (
           <CampoDeSelecao
@@ -121,21 +121,23 @@ export function FormularioDeAvaliacao(props: Readonly<FormularioDeAvaliacaoProps
           erro={errors.dataAvaliacao?.message}
           {...register('dataAvaliacao')}
         />
-        <CampoDeTexto
-          rotulo="Altura (m)"
-          type="number"
-          step="0.01"
-          erro={errors.alturaM?.message}
-          {...register('alturaM', { valueAsNumber: true })}
-        />
-        <CampoDeTexto
-          rotulo="Peso (kg)"
-          type="number"
-          step="0.01"
-          erro={errors.pesoKg?.message}
-          {...register('pesoKg', { valueAsNumber: true })}
-        />
-        <Button type="submit" loading={enviando}>
+        <SimpleGrid columns={{ base: 1, sm: 2 }} gap="4">
+          <CampoDeTexto
+            rotulo="Altura (m)"
+            type="number"
+            step="0.01"
+            erro={errors.alturaM?.message}
+            {...register('alturaM', { valueAsNumber: true })}
+          />
+          <CampoDeTexto
+            rotulo="Peso (kg)"
+            type="number"
+            step="0.01"
+            erro={errors.pesoKg?.message}
+            {...register('pesoKg', { valueAsNumber: true })}
+          />
+        </SimpleGrid>
+        <Button type="submit" loading={enviando} alignSelf={{ sm: 'flex-end' }}>
           {edicao ? 'Salvar alterações' : 'Registrar avaliação'}
         </Button>
       </Stack>

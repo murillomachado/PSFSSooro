@@ -6,7 +6,7 @@ const hoje = (): string => new Date().toISOString().slice(0, 10)
 test.describe('RF3, RF4, RF5, RN2, RN3, RN5, RN6, RN7 e RN9: avaliações', () => {
   test('o professor registra: o IMC e a classificação saem calculados (RF3, RF4)', async ({ page }) => {
     await entrarComSucesso(page, 'dwight.schrute')
-    await page.getByRole('link', { name: 'Avaliações' }).click()
+    await page.getByRole('link', { name: 'Avaliações', exact: true }).click()
     await page.getByRole('link', { name: 'Nova avaliação' }).click()
     // A lista também tem um campo "Aluno" (o filtro): espera a tela do formulário antes de preencher.
     await expect(page.getByRole('heading', { name: 'Nova avaliação' })).toBeVisible()
