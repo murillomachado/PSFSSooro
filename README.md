@@ -91,6 +91,17 @@ Situação: ✅ funcionando. Todos os requisitos funcionam na tela e na API. A c
 | Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web/src/components/ui` (como `TabelaResponsiva`, `BarraDeFiltros` e `PainelDeFormulario`) e `components/layout`; `FormularioDeUsuario` e `FormularioDeAvaliacao` servem a cadastro e edição; `Carregando` e botões com `loading` | ✅       |
 | Testes e Docker (diferenciais)                                                                 | `pnpm test` (unidade e integração), `pnpm test:e2e` (Playwright), `docker compose up --build`                                                                                                                                          | ✅       |
 
+### Extra: gráfico de evolução do IMC
+
+Não é pedido pela especificação; ajuda a cumprir o objetivo dela, acompanhar a evolução de cada aluno.
+
+| Quem                       | Como ver                                                                                                                        |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Aluno (`pam.beesly`)       | Na tela inicial e em **Minhas avaliações**: a linha do IMC sobre as faixas da tabela, o IMC atual e a variação desde a primeira |
+| Administrador ou professor | Em **Avaliações**, escolha um aluno no filtro (ex.: Kevin Malone) e clique em **Filtrar**                                       |
+
+As faixas desenhadas no fundo vêm da API (`GET /api/avaliacoes/faixas`), da mesma tabela que classifica as avaliações: uma faixa nova continua sendo uma linha só no código.
+
 ## Testando a API
 
 Estes passos exercitam os mesmos requisitos direto na API, com `curl`, em um terminal bash (Linux, macOS, WSL ou Git Bash). Precisam do `curl` e do Node.js (usado só para ler o JSON das respostas). Com a API no ar (veja [Como executar](#como-executar)), rode os comandos na ordem, no mesmo terminal:

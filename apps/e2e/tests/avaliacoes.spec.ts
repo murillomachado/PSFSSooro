@@ -95,4 +95,20 @@ test.describe('RF3, RF4, RF5, RN2, RN3, RN5, RN6, RN7 e RN9: avaliações', () =
     await page.goto('/avaliacoes/nova')
     await expect(page).toHaveURL(/\/inicio$/)
   })
+  test('o gráfico mostra a evolução do IMC: o aluno no início, a equipe ao filtrar por um aluno', async ({ page }) => {
+    const pontos = page.locator('section[aria-label="Evolução do IMC"] .recharts-line-dots circle')
+
+    await entrarComSucesso(page, 'pam.beesly')
+    await expect(page.getByRole('heading', { name: 'Evolução do IMC' })).toBeVisible()
+    await expect(pontos).toHaveCount(6)
+
+    await entrarComSucesso(page, 'michael.scott')
+    await page.goto('/avaliacoes')
+    await expect(page.getByText(/Filtre por um aluno/)).toBeVisible()
+    await page.getByLabel('Aluno', { exact: true }).selectOption({ label: 'Stanley Hudson' })
+    await page.getByRole('button', { name: 'Filtrar' }).click()
+    await expect(page.getByRole('heading', { name: 'Evolução do IMC' })).toBeVisible()
+    await expect(page.getByText('Stanley Hudson · 6 avaliações')).toBeVisible()
+    await expect(pontos).toHaveCount(6)
+  })
 })

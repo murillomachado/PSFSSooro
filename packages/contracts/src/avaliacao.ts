@@ -64,5 +64,9 @@ export const paginaDeAvaliacoesSchema = paginaSchema(avaliacaoRespostaSchema)
 export type CriarAvaliacaoEntrada = z.infer<typeof criarAvaliacaoSchema>
 export type EditarAvaliacaoEntrada = z.infer<typeof editarAvaliacaoSchema>
 export type ListarAvaliacoesQuery = z.infer<typeof listarAvaliacoesQuerySchema>
+/** Uma faixa da tabela de classificação do IMC: ela começa em `minimo` e vai até onde a próxima começa. */
+export const faixaImcRespostaSchema = z.object({ codigo: z.string(), descricao: z.string(), minimo: z.number() })
+
 export type AvaliacaoResposta = z.infer<typeof avaliacaoRespostaSchema>
+export type FaixaImcResposta = z.infer<typeof faixaImcRespostaSchema>
 export type PaginaDeAvaliacoes = z.infer<typeof paginaDeAvaliacoesSchema>
