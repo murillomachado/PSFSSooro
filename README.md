@@ -2,11 +2,21 @@
 
 Sistema web para uma academia acompanhar a evolução do IMC dos alunos, com três perfis de acesso: administrador, professor e aluno. Alunos e professores são cadastrados, os professores registram avaliações de IMC e as avaliações podem ser consultadas para acompanhar a evolução.
 
-Monorepo pnpm: `apps/api` (Express 5, TypeORM 1, SQLite), `apps/web` (Next.js 16, Chakra UI 3) e `packages/contracts` (schemas zod compartilhados pelos dois).
-
-> **Em construção.** A tabela de requisitos mostra o que já funciona. Ela é atualizada em cada PR.
+Monorepo pnpm: `apps/api` (Express 5, TypeORM 1, SQLite), `apps/web` (Next.js 16, Chakra UI 3), `apps/e2e` (testes de ponta a ponta com Playwright) e `packages/contracts` (schemas zod compartilhados pelos dois).
 
 ## Como executar
+
+### Com Docker (o caminho mais curto)
+
+Com o Docker instalado, uma linha sobe a API, a Web e o banco já com os usuários de demonstração:
+
+```bash
+docker compose up --build
+```
+
+Depois, abra **http://localhost:3000** (a API fica em http://localhost:3333). O banco fica no volume `banco` e sobrevive a reinícios; `docker compose down -v` apaga tudo. O `JWT_SECRET` do compose é de demonstração.
+
+### Sem Docker
 
 Requisitos: **Node.js 26.13.1** (o `.nvmrc`; com nvm ou fnm basta entrar na pasta) e **pnpm 12.23.0** (`npm i -g pnpm@12.23.0`, porque o Node 26 não traz mais o Corepack).
 
@@ -24,7 +34,7 @@ Em outro terminal, a Web (abre em http://localhost:3000 e fala com a API em `NEX
 pnpm --filter @psfssooro/web dev
 ```
 
-O Docker entra aqui na próxima etapa. Para rodar todos os gates de qualidade: `pnpm verify`.
+Para rodar todos os gates de qualidade: `pnpm verify`. Os testes de ponta a ponta (sobem a API e a Web sozinhos, com um banco novo) rodam com `pnpm test:e2e`; na primeira vez, instale o navegador: `pnpm --filter @psfssooro/e2e exec playwright install chromium`.
 
 ### Usuários de demonstração
 
@@ -68,16 +78,16 @@ Situação: ✅ funcionando · 🔶 parcial · ⏳ pendente. "✅ API" quer dize
 
 ### Exigências técnicas
 
-| Exigência                                                                                      | Onde está                                                         | Situação |
-| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | -------- |
-| Monorepo no GitHub, Conventional Commits                                                       | este repositório; commitlint no commit e no CI                    | ✅       |
-| Versões fixas (sem `^` nem `~`), Node em `engines` e `.nvmrc`, pnpm em `packageManager`        | `pnpm check-versions`, também no CI                               | ✅       |
-| TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                              | ✅       |
-| Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts` | ✅       |
-| Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth`, `usuarios` e `avaliacoes`                         | 🔶       |
-| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios  | ✅       |
-| Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web`                                                        | ⏳       |
-| Testes e Docker (diferenciais)                                                                 | testes em cada PR (`pnpm test`); Docker a seguir                  | 🔶       |
+| Exigência                                                                                      | Onde está                                                                                     | Situação |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- | -------- |
+| Monorepo no GitHub, Conventional Commits                                                       | este repositório; commitlint no commit e no CI                                                | ✅       |
+| Versões fixas (sem `^` nem `~`), Node em `engines` e `.nvmrc`, pnpm em `packageManager`        | `pnpm check-versions`, também no CI                                                           | ✅       |
+| TypeScript 6 com `strict: true`                                                                | `tsconfig.base.json`                                                                          | ✅       |
+| Back-end: Express, TypeORM com migrations, SQLite, JWT, validação com zod, erros centralizados | `apps/api`: `src/shared/database`, `src/shared/http`, `contracts`                             | ✅       |
+| Back-end em camadas, SOLID, middlewares de autenticação e autorização, `.env.example`          | módulos `auth`, `usuarios` e `avaliacoes`                                                     | 🔶       |
+| Front-end: Next (App Router), Chakra, TanStack Query, React Hook Form, Axios, sem `any`        | `apps/web`: Next, Chakra, TanStack Query, React Hook Form, Axios                              | ✅       |
+| Componentes reutilizáveis, mesmo formulário para cadastro e edição, estados de carregamento    | `apps/web`                                                                                    | ⏳       |
+| Testes e Docker (diferenciais)                                                                 | `pnpm test` (unidade e integração), `pnpm test:e2e` (Playwright), `docker compose up --build` | ✅       |
 
 ## Testando a API
 

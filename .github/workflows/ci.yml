@@ -53,6 +53,36 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm audit --audit-level high
 
+  e2e:
+    name: E2E
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/preparar-ambiente
+      - name: Build
+        run: pnpm build
+      - name: Navegador do Playwright
+        run: pnpm --filter @psfssooro/e2e exec playwright install --with-deps chromium
+      - name: Testes de ponta a ponta
+        run: pnpm --filter @psfssooro/e2e test
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Subir o sistema com docker compose
+        run: docker compose up --build --wait
+      - name: Web e API respondem
+        run: |
+          curl --fail --silent http://localhost:3333/api/health
+          curl --fail --silent --retry 15 --retry-connrefused --retry-delay 2 --output /dev/null http://localhost:3000/login
+      - name: Logs em caso de falha
+        if: failure()
+        run: docker compose logs
+
   commits:
     name: Conventional Commits
     runs-on: ubuntu-24.04
@@ -85,7 +115,7 @@ jobs:
   quality-gates-ok:
     name: quality-gates-ok
     if: always()
-    needs: [qualidade, commits]
+    needs: [qualidade, e2e, docker, commits]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:

@@ -1,0 +1,41 @@
+# Sobe o sistema inteiro: docker compose up --build
+# Web em http://localhost:3000 · API em http://localhost:3333
+services:
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      # Valor de demonstração. Em qualquer ambiente real, troque por um segredo próprio.
+      JWT_SECRET: ${JWT_SECRET:-segredo-de-demonstracao-troque-em-producao-0123456789}
+      CORS_ORIGIN: http://localhost:3000
+    ports:
+      - '3333:3333'
+    volumes:
+      - banco:/data
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3333/api/health').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:3333/api
+    ports:
+      - '3000:3000'
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  banco:
