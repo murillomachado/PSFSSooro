@@ -1,12 +1,12 @@
 # Regras para agentes de IA neste repositório
 
-Leia antes de qualquer trabalho. O objetivo é **passar no teste técnico**: o avaliador precisa conseguir rodar o sistema e conferir, requisito por requisito, que o que a especificação pede funciona. A tabela "Como testar os requisitos" do [README](README.md) é a fonte de verdade do que está pronto.
+Leia antes de qualquer trabalho. O objetivo é que **qualquer pessoa consiga rodar o sistema e conferir**, requisito por requisito, que o que a especificação pede funciona. A tabela "Como testar os requisitos" do [README](README.md) é a fonte de verdade do que está pronto.
 
 ## Regras de objetividade
 
 1. **Só o que a especificação pede.** Antes de qualquer trabalho: "a especificação pede isso, ou é indispensável ao que ela pede?" Se não, não se faz. Proibido: verificadores e gates novos, testes de configuração, de CI ou de documentação, ADRs, documentos de processo.
 2. **Prioridade:** (1) requisitos obrigatórios (RF1–RF6, RN1–RN9 e os padrões da seção 6), (2) diferenciais pedidos (testes e Docker), (3) extras. Nada do nível 3 antes de o nível 1 estar inteiro funcionando.
-3. **Cada PR entrega um pedaço de requisito que o avaliador consegue ver funcionando**, e atualiza a tabela do README (usuário de demonstração, caminho na tela, resultado esperado). PRs por módulo, e não por tarefa miúda.
+3. **Cada PR entrega um pedaço de requisito que quem revisa consegue ver funcionando**, e atualiza a tabela do README (usuário de demonstração, caminho na tela, resultado esperado). PRs por módulo, e não por tarefa miúda.
 4. **Testes automatizados só de comportamento do produto.** TDD como método: o teste vem antes do código. Sem ritual de commit vermelho.
 5. **Uma rodada de revisão por PR**, e só entram achados que quebrem um requisito, a segurança ou um limite da especificação. O resto é ignorado ou vira uma linha nas pendências.
 6. **Descrição de PR com até 15 linhas:** o quê, por quê e como ver funcionando.
