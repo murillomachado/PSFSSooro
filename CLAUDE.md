@@ -34,3 +34,4 @@ Leia antes de qualquer trabalho. O objetivo é **passar no teste técnico**: o a
 - ESLint flat config: uma regra repetida num bloco mais específico substitui a anterior, inclusive as opções.
 - Regex: o lint barra regex com risco de backtracking e `new RegExp` com texto variável. O BOM entra no código como `0xfeff`, nunca como o caractere.
 - Windows: `.gitattributes` força LF.
+- Chakra/Emotion no SSR: os estilos passam pelo `RegistroDeEstilos` (`apps/web/src/app`), que os põe no `<head>`. Sem ele, toda página com dados do servidor dá erro de hidratação (React #418) só no build de produção; o E2E de hidratação pega.
