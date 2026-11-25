@@ -4,6 +4,7 @@ import { AvaliacaoEntity } from '../../modules/avaliacoes/infra/avaliacao.entity
 import { UsuarioEntity } from '../../modules/usuarios/infra/usuario.entity.ts'
 import { CriarUsuarios1764200000000 } from './migrations/1764200000000-criar-usuarios.ts'
 import { CriarAvaliacoes1764300000000 } from './migrations/1764300000000-criar-avaliacoes.ts'
+import { VincularAlunoAoProfessor1764400000000 } from './migrations/1764400000000-vincular-aluno-ao-professor.ts'
 
 export type { DataSource }
 
@@ -16,7 +17,7 @@ export function criarBanco(caminho: string): DataSource {
     type: 'better-sqlite3',
     database: caminho,
     entities: [UsuarioEntity, AvaliacaoEntity],
-    migrations: [CriarUsuarios1764200000000, CriarAvaliacoes1764300000000],
+    migrations: [CriarUsuarios1764200000000, CriarAvaliacoes1764300000000, VincularAlunoAoProfessor1764400000000],
     synchronize: false,
   })
 }

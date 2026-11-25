@@ -3,6 +3,8 @@ import type { Avaliacao } from '../domain/avaliacao.ts'
 
 export interface FiltrosDeAvaliacao {
   readonly alunoId?: string
+  /** Restringe aos alunos desta lista (os de um professor). Lista vazia não devolve nada. */
+  readonly alunoIds?: readonly string[]
   readonly professorId?: string
   /** Primeiro dia do período, em AAAA-MM-DD, inclusive. */
   readonly de?: string

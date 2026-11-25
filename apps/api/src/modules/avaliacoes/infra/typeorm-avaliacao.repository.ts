@@ -21,6 +21,10 @@ export class TypeOrmAvaliacaoRepository implements AvaliacaoRepository {
   async listar(filtros: FiltrosDeAvaliacao): Promise<PaginaDe<Avaliacao>> {
     const consulta = this.repositorio.createQueryBuilder('a')
     if (filtros.alunoId !== undefined) consulta.andWhere('a.aluno_id = :alunoId', { alunoId: filtros.alunoId })
+    if (filtros.alunoIds !== undefined) {
+      if (filtros.alunoIds.length === 0) consulta.andWhere('1 = 0')
+      else consulta.andWhere('a.aluno_id IN (:...alunoIds)', { alunoIds: filtros.alunoIds })
+    }
     if (filtros.professorId !== undefined) {
       consulta.andWhere('a.professor_id = :professorId', { professorId: filtros.professorId })
     }

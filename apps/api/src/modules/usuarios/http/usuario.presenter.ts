@@ -10,6 +10,7 @@ export function paraResposta(usuario: Usuario): UsuarioResposta {
     usuario: usuario.usuario,
     perfil: usuario.perfil,
     ativo: usuario.ativo,
+    professorId: usuario.professorId ?? null,
     criadoEm: usuario.criadoEm,
     atualizadoEm: usuario.atualizadoEm,
   }

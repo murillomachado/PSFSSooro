@@ -20,8 +20,11 @@ export const ADMIN: Ator = { id: 'admin-1', perfil: 'ADMINISTRADOR' }
 export const PROFESSOR: Ator = { id: 'professor-1', perfil: 'PROFESSOR' }
 export const ALUNO: Ator = { id: 'aluno-1', perfil: 'ALUNO' }
 
+/** Por padrão, um aluno ativo do PROFESSOR dos testes (o responsável só existe para alunos). */
 export function novoUsuario(parcial: Partial<Usuario> = {}): Usuario {
+  const perfil = parcial.perfil ?? 'ALUNO'
   return {
+    ...(perfil === 'ALUNO' ? { professorId: PROFESSOR.id } : {}),
     id: randomUUID(),
     nome: 'Ana Souza',
     usuario: 'aluno.ana',

@@ -59,6 +59,26 @@ describe('FormularioDeUsuario (RF1, RN4)', () => {
     })
   })
 
+  it('o administrador escolhe o professor responsável de um aluno, obrigatório só para alunos (RN6)', async () => {
+    const professorId = USUARIO_EXEMPLO.professorId ?? ''
+    const aoEnviar = montar({ professores: [{ valor: professorId, texto: 'Carla' }] })
+    const pessoa = userEvent.setup()
+    await pessoa.type(screen.getByLabelText('Nome'), 'Fábio Rocha')
+    await pessoa.type(screen.getByLabelText('Usuário (login)'), 'aluno.fabio')
+    await pessoa.type(screen.getByLabelText('Senha'), 'senha1234')
+    await pessoa.selectOptions(screen.getByLabelText('Perfil'), 'ALUNO')
+    await pessoa.click(screen.getByRole('button', { name: 'Cadastrar' }))
+    expect(await screen.findByText('Escolha o professor responsável')).toBeDefined()
+    expect(aoEnviar).not.toHaveBeenCalled()
+    await pessoa.selectOptions(screen.getByLabelText('Professor responsável'), 'Carla')
+    await pessoa.click(screen.getByRole('button', { name: 'Cadastrar' }))
+    await waitFor(() => {
+      expect(aoEnviar).toHaveBeenCalledWith(expect.objectContaining({ perfil: 'ALUNO', professorId }))
+    })
+    await pessoa.selectOptions(screen.getByLabelText('Perfil'), 'PROFESSOR')
+    expect(screen.queryByLabelText('Professor responsável')).toBeNull()
+  })
+
   it('na edição, é o mesmo formulário preenchido, e senha em branco mantém a atual', async () => {
     const aoEnviar = montar({ usuario: USUARIO_EXEMPLO })
     expect(screen.getByLabelText<HTMLInputElement>('Nome').value).toBe('Ana Souza')

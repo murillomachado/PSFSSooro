@@ -34,16 +34,20 @@ export function garantirDataNaoFutura(relogio: Relogio, dataAvaliacao: string): 
 
 /**
  * O aluno e o professor informados precisam existir, ter o perfil certo e estar ativos (RN9, D6).
- * Quem não é informado (porque o vínculo já existia) não é conferido de novo.
+ * Quem não é informado (porque o vínculo já existia) não é conferido de novo. Com `responsavel`, o
+ * aluno precisa ser desse professor (RN6); um aluno de outro professor é tratado como inexistente.
  */
 export async function validarParticipantes(
   usuarios: UsuarioRepository,
   alunoId: string | undefined,
   professorId: string | undefined,
+  responsavel?: string,
 ): Promise<void> {
   if (alunoId !== undefined) {
     const aluno = await usuarios.buscarPorId(alunoId)
-    if (aluno?.perfil !== 'ALUNO') throw new NaoEncontrado('Aluno não encontrado.', 'ALUNO_NAO_ENCONTRADO')
+    if (aluno?.perfil !== 'ALUNO' || (responsavel !== undefined && aluno.professorId !== responsavel)) {
+      throw new NaoEncontrado('Aluno não encontrado.', 'ALUNO_NAO_ENCONTRADO')
+    }
     if (!aluno.ativo) {
       throw new RegraDeNegocio('Não é possível registrar avaliação para um aluno inativo.', 'ALUNO_INATIVO')
     }
@@ -60,9 +64,15 @@ export async function validarParticipantes(
 }
 
 /** Acha a avaliação que o ator pode ver. Quem não existe e quem ele não pode ver dão o mesmo 404. */
-export async function localizarAvaliacao(avaliacoes: AvaliacaoRepository, ator: Ator, id: string): Promise<Avaliacao> {
+export async function localizarAvaliacao(
+  avaliacoes: AvaliacaoRepository,
+  usuarios: UsuarioRepository,
+  ator: Ator,
+  id: string,
+): Promise<Avaliacao> {
   const avaliacao = await avaliacoes.buscarPorId(id)
-  if (avaliacao === undefined || !podeVerAvaliacao(ator, avaliacao)) {
+  const responsavel = avaliacao === undefined ? undefined : (await usuarios.buscarPorId(avaliacao.alunoId))?.professorId
+  if (avaliacao === undefined || !podeVerAvaliacao(ator, avaliacao, responsavel)) {
     throw new NaoEncontrado('Avaliação não encontrada.', 'AVALIACAO_NAO_ENCONTRADA')
   }
   return avaliacao

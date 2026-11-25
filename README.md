@@ -42,12 +42,15 @@ Para rodar todos os gates de qualidade: `pnpm verify`. Os testes de ponta a pont
 
 Todos com a senha `senha1234`. O menu muda conforme o perfil: o administrador vê **Usuários** e **Avaliações**; o professor, **Alunos** e **Avaliações**; o aluno, **Minhas avaliações**.
 
-| Usuário                                                                         | Perfil        | Situação                                                    |
-| ------------------------------------------------------------------------------- | ------------- | ----------------------------------------------------------- |
-| `michael.scott`                                                                 | Administrador | ativo                                                       |
-| `dwight.schrute`, `jim.halpert`                                                 | Professor     | ativo                                                       |
-| `pam.beesly`, `kevin.malone`, `stanley.hudson`, `andy.bernard`, `angela.martin` | Aluno         | ativo, com seis avaliações mensais (maio a outubro de 2026) |
-| `ryan.howard`                                                                   | Aluno         | **inativo**, para testar a RN8                              |
+| Usuário                                         | Perfil        | Situação                                                                               |
+| ----------------------------------------------- | ------------- | -------------------------------------------------------------------------------------- |
+| `michael.scott`                                 | Administrador | ativo                                                                                  |
+| `dwight.schrute`, `jim.halpert`                 | Professor     | ativo                                                                                  |
+| `kevin.malone`, `andy.bernard`, `angela.martin` | Aluno         | ativo, aluno de `dwight.schrute`, com seis avaliações mensais (maio a outubro de 2026) |
+| `pam.beesly`, `stanley.hudson`                  | Aluno         | ativo, aluno de `jim.halpert`, com seis avaliações mensais (maio a outubro de 2026)    |
+| `ryan.howard`                                   | Aluno         | **inativo**, aluno de `jim.halpert`, para testar a RN8                                 |
+
+Cada aluno tem um professor responsável (RN6). No histórico, os dois professores também avaliaram alunos um do outro: cada professor vê todas as avaliações dos seus alunos, quem quer que as tenha feito.
 
 ## Como testar os requisitos
 
@@ -66,17 +69,17 @@ Situação: ✅ funcionando. Todos os requisitos funcionam na tela e na API. A c
 
 ### Regras de negócio
 
-| Código | O que a especificação pede                                                                    | Como ver                                                                                                                               | Situação |
-| ------ | --------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Como `michael.scott`: cadastra, edita e **Excluir** (com confirmação). Excluir quem tem avaliações (ex.: `pam.beesly`) mostra o motivo | ✅       |
-| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Como `michael.scott`: registra (escolhendo o professor), **Editar** qualquer avaliação e **Excluir** com confirmação                   | ✅       |
-| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Como `michael.scott`, **Avaliações** lista as de todos os alunos; filtre por aluno                                                     | ✅       |
-| RN4    | Professor cadastra e edita alunos                                                             | Como `dwight.schrute`, o menu é **Alunos**: lista só alunos e cadastra/edita aluno, sem escolher perfil nem inativar/excluir           | ✅       |
-| RN5    | Professor cadastra e edita avaliações                                                         | Como `dwight.schrute`: registra e **Editar** só as próprias; nas de `jim.halpert` não há botão (e a API devolve 403)                   | ✅       |
-| RN6    | Professor consulta as avaliações de seus alunos                                               | Como `dwight.schrute`, **Avaliações** lista as avaliações de todos os alunos                                                           | ✅       |
-| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `pam.beesly`, **Minhas avaliações** mostra só as dela, sem ações                                                                  | ✅       |
-| RN8    | Usuário inativo não acessa o sistema                                                          | Na tela de login, `ryan.howard` vê "Este usuário está inativo". Quem é inativado perde o acesso na hora (passo 5 da API: 403)          | ✅       |
-| RN9    | Usuário inativo não pode ter novas avaliações                                                 | No formulário só aparecem alunos e professores ativos; `ryan.howard` não pode ser escolhido (a API também recusa, 422)                 | ✅       |
+| Código | O que a especificação pede                                                                    | Como ver                                                                                                                                                                                                                                                                                                                                                                                         | Situação |
+| ------ | --------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| RN1    | Administrador cadastra, edita e exclui usuários de qualquer perfil (exclui só sem avaliações) | Como `michael.scott`: cadastra, edita e **Excluir** (com confirmação). Excluir quem tem avaliações (ex.: `pam.beesly`) mostra o motivo                                                                                                                                                                                                                                                           | ✅       |
+| RN2    | Administrador cadastra, edita e exclui avaliações                                             | Como `michael.scott`: registra (escolhendo o professor), **Editar** qualquer avaliação e **Excluir** com confirmação                                                                                                                                                                                                                                                                             | ✅       |
+| RN3    | Administrador consulta as avaliações de qualquer aluno                                        | Como `michael.scott`, **Avaliações** lista as de todos os alunos; filtre por aluno                                                                                                                                                                                                                                                                                                               | ✅       |
+| RN4    | Professor cadastra e edita alunos                                                             | Como `dwight.schrute`, o menu é **Alunos**: lista os alunos dele e cadastra/edita aluno (o aluno novo fica com ele), sem escolher perfil nem inativar/excluir                                                                                                                                                                                                                                    | ✅       |
+| RN5    | Professor cadastra e edita avaliações                                                         | Como `dwight.schrute`: registra para os alunos dele e **Editar** só as próprias; nas que `jim.halpert` fez em `kevin.malone` não há botão (a API devolve 403)                                                                                                                                                                                                                                    | ✅       |
+| RN6    | Professor consulta as avaliações de seus alunos                                               | Cada aluno tem um **professor responsável** (o administrador escolhe e transfere; o professor que cadastra é o responsável). Como `dwight.schrute`, **Avaliações** lista só as de `kevin.malone`, `andy.bernard` e `angela.martin`, inclusive as feitas por `jim.halpert`; as de `pam.beesly` não aparecem (a API devolve 404). Como `michael.scott`, **Usuários** mostra e filtra o responsável | ✅       |
+| RN7    | Aluno consulta apenas as próprias avaliações                                                  | Como `pam.beesly`, **Minhas avaliações** mostra só as dela, sem ações                                                                                                                                                                                                                                                                                                                            | ✅       |
+| RN8    | Usuário inativo não acessa o sistema                                                          | Na tela de login, `ryan.howard` vê "Este usuário está inativo". Quem é inativado perde o acesso na hora (passo 5 da API: 403)                                                                                                                                                                                                                                                                    | ✅       |
+| RN9    | Usuário inativo não pode ter novas avaliações                                                 | Como `jim.halpert`, o formulário só oferece os alunos ativos dele: `ryan.howard` não aparece (a API também recusa, 422). O professor avaliador escolhido pelo administrador também precisa estar ativo                                                                                                                                                                                           | ✅       |
 
 ### Exigências técnicas
 
@@ -135,19 +138,20 @@ curl -s -X PUT $API/usuarios/ID -H "Authorization: Bearer $TOKEN" -H "$JSON" -d 
 curl -s -X PATCH $API/usuarios/ID/situacao -H "Authorization: Bearer $TOKEN" -H "$JSON" -d '{"ativo":false}'
 curl -s -i -X POST $API/auth/login -H "$JSON" -d '{"usuario":"prof.marta","senha":"senha1234"}'   # 403
 
-# 6. Professor (RN4): só vê alunos, cadastra aluno, mas não cadastra professor
+# 6. Professor (RN4, RN6): só vê os alunos dele, cadastra aluno (que fica com ele), mas não cadastra professor
 PROF=$(pegar_token dwight.schrute)
-curl -s $API/usuarios -H "Authorization: Bearer $PROF"
+curl -s $API/usuarios -H "Authorization: Bearer $PROF"                                                 # kevin, andy, angela
 curl -s -i -X POST $API/usuarios -H "Authorization: Bearer $PROF" -H "$JSON" \
   -d '{"nome":"Outro Prof","usuario":"prof.outro","senha":"senha1234","perfil":"PROFESSOR"}'     # 403
 
 # 7. Registrar uma avaliação (RF3, RF4, RN5, RN9): o professor é o avaliador; o IMC vem calculado
-PAM=$(curl -s "$API/usuarios?busca=pam" -H "Authorization: Bearer $PROF" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).itens[0].id")
+KEVIN=$(curl -s "$API/usuarios?busca=kevin" -H "Authorization: Bearer $PROF" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).itens[0].id")
 curl -s -X POST $API/avaliacoes -H "Authorization: Bearer $PROF" -H "$JSON" \
-  -d "{\"alunoId\":\"$PAM\",\"dataAvaliacao\":\"2026-11-20\",\"alturaM\":1.75,\"pesoKg\":72}"   # imc 23.5, PESO_NORMAL
+  -d "{\"alunoId\":\"$KEVIN\",\"dataAvaliacao\":\"2026-11-20\",\"alturaM\":1.75,\"pesoKg\":72}"   # imc 23.5, PESO_NORMAL
 
-# 8. Consultar (RF5, RN3, RN6, RN7): filtros alunoId, professorId, de e ate; o aluno só vê as próprias
-curl -s "$API/avaliacoes?alunoId=$PAM&de=2026-09-01" -H "Authorization: Bearer $TOKEN"
+# 8. Consultar (RF5, RN3, RN6, RN7): filtros alunoId, professorId, de e ate; o professor vê as dos alunos dele, o aluno só as próprias
+curl -s "$API/avaliacoes?alunoId=$KEVIN&de=2026-09-01" -H "Authorization: Bearer $TOKEN"
+curl -s $API/avaliacoes -H "Authorization: Bearer $PROF"                                              # só kevin, andy e angela
 curl -s $API/avaliacoes -H "Authorization: Bearer $(pegar_token pam.beesly)"
 
 # 9. Editar e excluir (RN2, RN5): troque AV pelo id de uma avaliação; o IMC é recalculado
@@ -155,7 +159,7 @@ curl -s -X PUT $API/avaliacoes/AV -H "Authorization: Bearer $PROF" -H "$JSON" -d
 curl -s -i -X DELETE $API/avaliacoes/AV -H "Authorization: Bearer $TOKEN"                              # 204; professor leva 403
 
 # 10. Excluir usuário (RN1): só sem avaliações
-curl -s -i -X DELETE $API/usuarios/$PAM -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
+curl -s -i -X DELETE $API/usuarios/$KEVIN -H "Authorization: Bearer $TOKEN"                              # 409: tem avaliações
 
 # 11. Limite de tentativas: 5 senhas erradas para o mesmo usuário bloqueiam o login dele por 15 minutos
 for i in 1 2 3 4 5; do curl -s -o /dev/null -w "%{http_code} " -X POST $API/auth/login -H "$JSON" -d '{"usuario":"stanley.hudson","senha":"errada123"}'; done   # 401 ×5

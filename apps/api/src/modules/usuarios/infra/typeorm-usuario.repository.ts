@@ -34,11 +34,11 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
     try {
       await this.repositorio.delete({ id })
     } catch (erro) {
-      // Se uma avaliação surgir entre a checagem do caso de uso e o DELETE, a chave estrangeira
-      // (RESTRICT) é a palavra final, e vira o mesmo conflito (409) em vez de um erro 500.
+      // Se uma avaliação (ou um aluno) surgir entre a checagem do caso de uso e o DELETE, a chave
+      // estrangeira (RESTRICT) é a palavra final, e vira um conflito (409) em vez de um erro 500.
       if (erro instanceof QueryFailedError && erro.message.includes('FOREIGN KEY')) {
         throw new Conflito(
-          'Este usuário tem avaliações vinculadas e não pode ser excluído. Inative-o em vez de excluir.',
+          'Este usuário tem avaliações ou alunos vinculados e não pode ser excluído. Inative-o em vez de excluir.',
           'USUARIO_COM_AVALIACOES',
         )
       }
@@ -52,6 +52,9 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
       .where('u.perfil IN (:...perfis)', { perfis: filtros.perfis })
     if (filtros.ativo !== undefined) {
       consulta.andWhere('u.ativo = :ativo', { ativo: filtros.ativo ? 1 : 0 })
+    }
+    if (filtros.professorId !== undefined) {
+      consulta.andWhere('u.professor_id = :professorId', { professorId: filtros.professorId })
     }
     if (filtros.busca !== undefined && filtros.busca !== '') {
       consulta.andWhere('(lower(u.nome) LIKE :busca OR u.usuario LIKE :busca)', {
@@ -82,5 +85,10 @@ export class TypeOrmUsuarioRepository implements UsuarioRepository {
 
   contarAdministradoresAtivos(): Promise<number> {
     return this.repositorio.countBy({ perfil: 'ADMINISTRADOR', ativo: true })
+  }
+
+  async idsDosAlunosDe(professorId: string): Promise<string[]> {
+    const alunos = await this.repositorio.find({ select: { id: true }, where: { professorId } })
+    return alunos.map((aluno) => aluno.id)
   }
 }

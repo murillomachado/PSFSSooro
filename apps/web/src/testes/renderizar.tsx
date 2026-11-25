@@ -20,6 +20,7 @@ export const USUARIO_EXEMPLO = {
   usuario: 'aluno.ana',
   perfil: 'ALUNO' as const,
   ativo: true,
+  professorId: '33333333-3333-4333-8333-333333333333' as string | null,
   criadoEm: '2026-11-01T10:00:00.000Z',
   atualizadoEm: '2026-11-01T10:00:00.000Z',
 }

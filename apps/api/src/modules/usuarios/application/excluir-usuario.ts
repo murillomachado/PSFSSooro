@@ -1,6 +1,6 @@
 import { Conflito, RegraDeNegocio, SemPermissao } from '../../../shared/errors/erros.ts'
 import type { Ator } from '../../../shared/security/ator.ts'
-import { localizarVisivel } from './regras-compartilhadas.ts'
+import { garantirSemAlunos, localizarVisivel } from './regras-compartilhadas.ts'
 import type { UsuarioRepository } from './usuario-repository.ts'
 import type { VinculosDoUsuario } from './vinculos.ts'
 
@@ -17,6 +17,7 @@ export class ExcluirUsuario {
     if (alvo.id === ator.id) {
       throw new RegraDeNegocio('Você não pode excluir a si mesmo.', 'NAO_EXCLUIR_A_SI_MESMO')
     }
+    await garantirSemAlunos(this.usuarios, alvo, 'ser excluído')
     // O banco também garante isto (chave estrangeira RESTRICT); aqui a resposta já sugere o caminho.
     if (await this.vinculos.possuiAvaliacoes(alvo.id)) {
       throw new Conflito(

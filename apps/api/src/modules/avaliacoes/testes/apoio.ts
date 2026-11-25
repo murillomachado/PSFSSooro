@@ -7,7 +7,13 @@ import { AGORA, administrador, novoUsuario, repositorioCom } from '../../usuario
 export { ADMIN, AGORA, relogioFixo } from '../../usuarios/testes/apoio.ts'
 
 export const ANA = novoUsuario({ id: 'aluna-ana', nome: 'Ana Souza', usuario: 'aluno.ana' })
-export const BRUNO = novoUsuario({ id: 'aluno-bruno', nome: 'Bruno Lima', usuario: 'aluno.bruno' })
+/** Ana é aluna de Paulo; Bruno, de Carla (RN6). */
+export const BRUNO = novoUsuario({
+  id: 'aluno-bruno',
+  nome: 'Bruno Lima',
+  usuario: 'aluno.bruno',
+  professorId: 'professor-2',
+})
 export const PAULO = novoUsuario({ id: 'professor-1', nome: 'Paulo', usuario: 'prof.paulo', perfil: 'PROFESSOR' })
 export const CARLA = novoUsuario({ id: 'professor-2', nome: 'Carla', usuario: 'prof.carla', perfil: 'PROFESSOR' })
 

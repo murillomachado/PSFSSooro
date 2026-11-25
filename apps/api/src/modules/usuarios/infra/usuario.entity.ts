@@ -25,6 +25,9 @@ export class UsuarioEntity {
   @Column({ type: 'boolean', default: true })
   ativo!: boolean
 
+  @Column({ type: 'varchar', name: 'professor_id', nullable: true })
+  professorId!: string | null
+
   @Column({ type: 'varchar', name: 'criado_em' })
   criadoEm!: string
 

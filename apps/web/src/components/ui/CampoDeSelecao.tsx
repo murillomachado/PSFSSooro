@@ -1,7 +1,7 @@
 import { Field, NativeSelect } from '@chakra-ui/react'
 import type { ComponentProps } from 'react'
 
-interface Opcao {
+export interface Opcao {
   readonly valor: string
   readonly texto: string
 }

@@ -8,6 +8,8 @@ export interface FiltrosDeUsuario {
   readonly ativo?: boolean
   /** Trecho do nome ou do nome de usuário. */
   readonly busca?: string
+  /** Só os alunos deste professor responsável. */
+  readonly professorId?: string
   readonly pagina: number
   readonly limite: number
 }
@@ -24,4 +26,6 @@ export interface UsuarioRepository {
   salvar(usuario: Usuario): Promise<void>
   excluir(id: string): Promise<void>
   contarAdministradoresAtivos(): Promise<number>
+  /** Os ids dos alunos de quem o professor é o responsável (RN6). */
+  idsDosAlunosDe(professorId: string): Promise<string[]>
 }

@@ -3,7 +3,12 @@ import { criarBancoEmMemoria } from '../../../shared/database/banco-em-memoria.t
 import type { FiltrosDeUsuario, UsuarioRepository } from '../application/usuario-repository.ts'
 import { MemoriaUsuarioRepository } from '../infra/memoria-usuario.repository.ts'
 import { TypeOrmUsuarioRepository } from '../infra/typeorm-usuario.repository.ts'
-import { administrador, novoUsuario } from './apoio.ts'
+import { administrador, novoUsuario as usuarioDosTestes, PROFESSOR } from './apoio.ts'
+import type { Usuario } from '../domain/usuario.ts'
+
+/** Aqui o professor dos testes não está gravado no banco: os usuários nascem sem responsável. */
+const novoUsuario = (parcial: Partial<Usuario> = {}): Usuario =>
+  usuarioDosTestes({ professorId: undefined, ...parcial })
 
 interface Ambiente {
   readonly repositorio: UsuarioRepository
@@ -97,8 +102,10 @@ describe.each([
   describe('listar', () => {
     beforeEach(async () => {
       await repositorio().salvar(administrador({ nome: 'Zélia Admin', usuario: 'admin' }))
-      await repositorio().salvar(novoUsuario({ nome: 'Carlos', usuario: 'prof.carlos', perfil: 'PROFESSOR' }))
-      await repositorio().salvar(novoUsuario({ nome: 'Ana', usuario: 'aluno.ana' }))
+      await repositorio().salvar(
+        novoUsuario({ id: PROFESSOR.id, nome: 'Carlos', usuario: 'prof.carlos', perfil: 'PROFESSOR' }),
+      )
+      await repositorio().salvar(novoUsuario({ nome: 'Ana', usuario: 'aluno.ana', professorId: PROFESSOR.id }))
       await repositorio().salvar(novoUsuario({ nome: 'Bruno', usuario: 'aluno.bruno', ativo: false }))
     })
 
@@ -135,6 +142,21 @@ describe.each([
     it('busca por um trecho do nome ou do nome de usuário, sem diferenciar maiúsculas', async () => {
       expect(await nomes({ busca: 'BRU' })).toEqual(['Bruno'])
       expect(await nomes({ busca: 'prof.' })).toEqual(['Carlos'])
+    })
+
+    it('filtra pelo professor responsável e acha os ids dos alunos dele (RN6)', async () => {
+      expect(await nomes({ professorId: PROFESSOR.id })).toEqual(['Ana'])
+      const ana = await repositorio().buscarPorUsuario('aluno.ana')
+      expect(ana?.professorId).toBe(PROFESSOR.id)
+      expect(await repositorio().idsDosAlunosDe(PROFESSOR.id)).toEqual([ana?.id])
+      expect(await repositorio().idsDosAlunosDe('outro')).toEqual([])
+    })
+
+    it('apaga o responsável de quem deixa de ser aluno', async () => {
+      const ana = await repositorio().buscarPorUsuario('aluno.ana')
+      if (ana === undefined) throw new Error('Ana não foi gravada')
+      await repositorio().salvar({ ...ana, perfil: 'ADMINISTRADOR', professorId: undefined })
+      expect((await repositorio().buscarPorId(ana.id))?.professorId).toBeUndefined()
     })
 
     it('pagina, com o total do conjunto filtrado', async () => {

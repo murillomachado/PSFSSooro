@@ -29,6 +29,7 @@ export class MemoriaUsuarioRepository implements UsuarioRepository {
     const filtrados = [...this.usuarios.values()]
       .filter((usuario) => filtros.perfis.includes(usuario.perfil))
       .filter((usuario) => filtros.ativo === undefined || usuario.ativo === filtros.ativo)
+      .filter((usuario) => filtros.professorId === undefined || usuario.professorId === filtros.professorId)
       .filter((usuario) => usuario.nome.toLowerCase().includes(busca) || usuario.usuario.includes(busca))
       .sort((a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id))
     const inicio = (filtros.pagina - 1) * filtros.limite
@@ -52,5 +53,10 @@ export class MemoriaUsuarioRepository implements UsuarioRepository {
   contarAdministradoresAtivos(): Promise<number> {
     const administradores = [...this.usuarios.values()].filter((u) => u.perfil === 'ADMINISTRADOR' && u.ativo)
     return Promise.resolve(administradores.length)
+  }
+
+  idsDosAlunosDe(professorId: string): Promise<string[]> {
+    const alunos = [...this.usuarios.values()].filter((usuario) => usuario.professorId === professorId)
+    return Promise.resolve(alunos.map((aluno) => aluno.id))
   }
 }

@@ -11,11 +11,13 @@ export function paraDominio(entidade: UsuarioEntity): Usuario {
     senhaHash: entidade.senhaHash,
     perfil: perfilSchema.parse(entidade.perfil),
     ativo: entidade.ativo,
+    ...(entidade.professorId === null ? {} : { professorId: entidade.professorId }),
     criadoEm: entidade.criadoEm,
     atualizadoEm: entidade.atualizadoEm,
   }
 }
 
 export function paraPersistencia(usuario: Usuario): UsuarioEntity {
-  return Object.assign(new UsuarioEntity(), usuario)
+  // Nulo explícito: sem ele, o TypeORM não apagaria o vínculo de quem deixa de ser aluno.
+  return Object.assign(new UsuarioEntity(), usuario, { professorId: usuario.professorId ?? null })
 }

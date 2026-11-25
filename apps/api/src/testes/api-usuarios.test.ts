@@ -6,6 +6,8 @@ import { type Ambiente, type ClienteAutenticado, criarAmbiente } from './ambient
 
 const URL_USUARIOS = '/api/usuarios'
 const PAM = 'pam.beesly'
+/** Aluno de dwight.schrute, o professor destes testes; pam.beesly é aluna de jim.halpert (RN6). */
+const KEVIN = 'kevin.malone'
 const NOVO_ALUNO = { nome: 'Fábio Rocha', usuario: 'aluno.fabio', senha: 'senha1234', perfil: 'ALUNO' }
 
 describe('API de usuários: permissões por perfil', () => {
@@ -35,10 +37,10 @@ describe('API de usuários: permissões por perfil', () => {
       expect(JSON.stringify(resposta.body)).not.toMatch(/senha/i)
     })
 
-    it('o professor vê só alunos, mesmo pedindo outro perfil', async () => {
+    it('o professor vê só os próprios alunos (RN6), mesmo pedindo outro perfil', async () => {
       const todos = pagina(await professor.get(URL_USUARIOS))
-      expect(todos.total).toBe(6)
-      expect(todos.itens.every((usuario) => usuario.perfil === 'ALUNO')).toBe(true)
+      expect(todos.itens.map((usuario) => usuario.usuario)).toEqual(['andy.bernard', 'angela.martin', KEVIN])
+      expect(todos.itens.every((usuario) => usuario.professorId === todos.itens[0]?.professorId)).toBe(true)
       expect(pagina(await professor.get(`${URL_USUARIOS}?perfil=PROFESSOR`)).total).toBe(0)
     })
 
@@ -71,9 +73,9 @@ describe('API de usuários: permissões por perfil', () => {
   })
 
   describe('detalhe', () => {
-    it('o professor vê um aluno; um professor ou administrador ele não vê, e recebe 404', async () => {
-      const idDaPam = await ambiente.idDe(PAM)
-      expect((await professor.get(`${URL_USUARIOS}/${idDaPam}`)).status).toBe(200)
+    it('o professor vê um aluno seu; o de outro professor, um professor ou um administrador dão 404', async () => {
+      expect((await professor.get(`${URL_USUARIOS}/${await ambiente.idDe(KEVIN)}`)).status).toBe(200)
+      expect((await professor.get(`${URL_USUARIOS}/${await ambiente.idDe(PAM)}`)).status).toBe(404)
       const doAdmin = await professor.get(`${URL_USUARIOS}/${await ambiente.idDe('michael.scott')}`)
       expect(doAdmin.status).toBe(404)
       expect(problema(doAdmin).codigo).toBe('USUARIO_NAO_ENCONTRADO')
@@ -100,8 +102,10 @@ describe('API de usuários: permissões por perfil', () => {
       expect(entrada.status).toBe(200)
     })
 
-    it('o professor cadastra alunos, mas não professores nem administradores', async () => {
-      expect((await professor.post(URL_USUARIOS).send(NOVO_ALUNO)).status).toBe(201)
+    it('o professor cadastra alunos, que ficam com ele (RN6), mas não professores nem administradores', async () => {
+      const cadastrado = await professor.post(URL_USUARIOS).send(NOVO_ALUNO)
+      expect(cadastrado.status).toBe(201)
+      expect((cadastrado.body as UsuarioResposta).professorId).toBe(await ambiente.idDe('dwight.schrute'))
       const naoPermitido = await professor
         .post(URL_USUARIOS)
         .send({ ...NOVO_ALUNO, usuario: 'prof.x', perfil: 'PROFESSOR' })
@@ -120,12 +124,25 @@ describe('API de usuários: permissões por perfil', () => {
       ])
     })
 
+    it('o administrador escolhe o professor responsável do aluno; sem ele, responde 400', async () => {
+      const semResponsavel = await admin.post(URL_USUARIOS).send({ ...NOVO_ALUNO, usuario: 'aluno.gil' })
+      expect(problema(semResponsavel).campos).toEqual([
+        { campo: 'professorId', mensagem: 'Escolha o professor responsável' },
+      ])
+      const idDoJim = await ambiente.idDe('jim.halpert')
+      const resposta = await admin
+        .post(URL_USUARIOS)
+        .send({ ...NOVO_ALUNO, usuario: 'aluno.gil', professorId: idDoJim })
+      expect(resposta.status).toBe(201)
+      expect((resposta.body as UsuarioResposta).professorId).toBe(idDoJim)
+    })
+
     it('o aluno não cadastra ninguém', async () => {
       expect((await aluno.post(URL_USUARIOS).send({ ...NOVO_ALUNO, usuario: 'aluno.y' })).status).toBe(403)
     })
 
     it('recusa um nome de usuário repetido, mesmo em maiúsculas, com 409', async () => {
-      const repetido = await admin.post(URL_USUARIOS).send({ ...NOVO_ALUNO, usuario: 'PAM.BEESLY' })
+      const repetido = await professor.post(URL_USUARIOS).send({ ...NOVO_ALUNO, usuario: 'PAM.BEESLY' })
       expect(repetido.status).toBe(409)
       expect(problema(repetido).codigo).toBe('USUARIO_JA_EXISTE')
     })
@@ -142,20 +159,36 @@ describe('API de usuários: permissões por perfil', () => {
 
   describe('editar (RF1, RN1, RN4)', () => {
     it('o administrador e o professor corrigem os dados de um aluno', async () => {
-      const url = `${URL_USUARIOS}/${await ambiente.idDe('kevin.malone')}`
+      const url = `${URL_USUARIOS}/${await ambiente.idDe(KEVIN)}`
       expect((await admin.put(url).send({ nome: 'Kevin Malone Souza' })).body).toMatchObject({
         nome: 'Kevin Malone Souza',
       })
       expect((await professor.put(url).send({ nome: 'Kevin Malone' })).body).toMatchObject({ nome: 'Kevin Malone' })
     })
 
-    it('o professor não edita outro professor (404) e não troca o perfil de um aluno (403)', async () => {
+    it('o professor não edita outro professor nem aluno de outro (404), nem troca perfil ou responsável (403)', async () => {
       const deOutroProfessor = `${URL_USUARIOS}/${await ambiente.idDe('jim.halpert')}`
       expect((await professor.put(deOutroProfessor).send({ nome: 'X Y' })).status).toBe(404)
-      const trocaDePerfil = await professor
-        .put(`${URL_USUARIOS}/${await ambiente.idDe(PAM)}`)
-        .send({ perfil: 'PROFESSOR' })
-      expect(trocaDePerfil.status).toBe(403)
+      expect((await professor.put(`${URL_USUARIOS}/${await ambiente.idDe(PAM)}`).send({ nome: 'X Y' })).status).toBe(
+        404,
+      )
+      const doKevin = `${URL_USUARIOS}/${await ambiente.idDe(KEVIN)}`
+      expect((await professor.put(doKevin).send({ perfil: 'PROFESSOR' })).status).toBe(403)
+      const transferencia = await professor.put(doKevin).send({ professorId: await ambiente.idDe('jim.halpert') })
+      expect(problema(transferencia).codigo).toBe('RESPONSAVEL_NAO_PERMITIDO')
+    })
+
+    it('o administrador transfere um aluno, e o professor com alunos não é excluído (409)', async () => {
+      const idDoJim = await ambiente.idDe('jim.halpert')
+      const transferido = await admin
+        .put(`${URL_USUARIOS}/${await ambiente.idDe('andy.bernard')}`)
+        .send({ professorId: idDoJim })
+      expect((transferido.body as UsuarioResposta).professorId).toBe(idDoJim)
+      expect(pagina(await admin.get(`${URL_USUARIOS}?professorId=${idDoJim}`)).itens.map((u) => u.usuario)).toContain(
+        'andy.bernard',
+      )
+      const exclusao = await admin.delete(`${URL_USUARIOS}/${idDoJim}`)
+      expect(problema(exclusao).codigo).toBe('PROFESSOR_COM_ALUNOS')
     })
 
     it('recusa trocar o nome de usuário por um que já existe', async () => {
@@ -174,7 +207,7 @@ describe('API de usuários: permissões por perfil', () => {
 
   describe('ativar e inativar (RF2)', () => {
     it('o administrador inativa e reativa um usuário', async () => {
-      const url = `${URL_USUARIOS}/${await ambiente.idDe('kevin.malone')}/situacao`
+      const url = `${URL_USUARIOS}/${await ambiente.idDe(KEVIN)}/situacao`
       expect((await admin.patch(url).send({ ativo: false })).body).toMatchObject({ ativo: false })
       expect((await admin.patch(url).send({ ativo: true })).body).toMatchObject({ ativo: true })
     })

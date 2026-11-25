@@ -11,7 +11,7 @@ import { z } from 'zod'
 import { type Caminhos, operacao } from '../../../shared/http/openapi.ts'
 
 const TAG = 'Avaliações'
-const TODOS = 'todos (o aluno só vê as próprias)'
+const TODOS = 'todos (o professor vê as dos seus alunos; o aluno, só as próprias)'
 const EQUIPE = 'administrador e professor'
 const UMA_AVALIACAO = {
   status: 200,
@@ -33,7 +33,7 @@ export const CAMINHOS_DE_AVALIACOES: Caminhos = {
     post: operacao({
       resumo: 'Registrar uma avaliação: a API calcula o IMC e a classificação (RF3, RF4, RN2, RN5, RN9)',
       tag: TAG,
-      perfis: `${EQUIPE} (o administrador informa o professor)`,
+      perfis: `${EQUIPE} (o professor, só para os seus alunos; o administrador informa o professor)`,
       corpo: criarAvaliacaoSchema,
       sucesso: { ...UMA_AVALIACAO, status: 201 },
       erros: [400, 401, 403, 404, 422],

@@ -32,6 +32,14 @@ describe('RegistrarAvaliacao', () => {
     })
   })
 
+  it('o professor só avalia os seus alunos: o de outro professor é "não encontrado" (RN6)', async () => {
+    const { registrar } = await montar()
+    await expect(registrar.executar(comoPaulo, { ...entrada, alunoId: BRUNO.id })).rejects.toMatchObject({
+      status: 404,
+      codigo: 'ALUNO_NAO_ENCONTRADO',
+    })
+  })
+
   it('o administrador escolhe o professor avaliador, e precisa informar qual', async () => {
     const { registrar } = await montar()
     expect((await registrar.executar(ADMIN, { ...entrada, professorId: CARLA.id })).avaliacao.professorId).toBe(
