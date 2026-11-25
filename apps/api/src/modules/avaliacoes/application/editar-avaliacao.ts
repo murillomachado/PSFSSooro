@@ -19,8 +19,8 @@ export class EditarAvaliacao {
   ) {}
 
   async executar(ator: Ator, id: string, entrada: EditarAvaliacaoEntrada): Promise<AvaliacaoDetalhada> {
-    const atual = await localizarAvaliacao(this.avaliacoes, ator, id)
-    // O professor vê as avaliações dos colegas, mas só edita as suas: 403, e não 404.
+    const atual = await localizarAvaliacao(this.avaliacoes, this.usuarios, ator, id)
+    // O professor vê as avaliações que colegas fizeram nos seus alunos, mas só edita as suas: 403, e não 404.
     if (!podeEditarAvaliacao(ator, atual)) {
       throw new SemPermissao('Você só edita as avaliações que realizou.', 'AVALIACAO_DE_OUTRO_PROFESSOR')
     }

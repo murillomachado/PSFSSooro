@@ -15,7 +15,11 @@ export function TelaDeUsuarios() {
     <RotaDePerfil perfis={['ADMINISTRADOR', 'PROFESSOR']}>
       <CabecalhoDePagina
         titulo={ehAdmin ? 'Usuários' : 'Alunos'}
-        descricao={ehAdmin ? 'Administradores, professores e alunos da academia.' : 'Os alunos da academia.'}
+        descricao={
+          ehAdmin
+            ? 'Administradores, professores e alunos da academia.'
+            : 'Os alunos de quem você é o professor responsável.'
+        }
         acao={
           <Button asChild>
             <Link href="/usuarios/novo">

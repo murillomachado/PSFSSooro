@@ -1,13 +1,22 @@
 import { Precarregado } from '@/components/ui/Precarregado.tsx'
+import { sessaoNoServidor } from '@/features/auth/servidor.ts'
 import { PRIMEIRA_PAGINA } from '@/features/usuarios/chaves.ts'
 import { TelaDeUsuarios } from '@/features/usuarios/components/TelaDeUsuarios.tsx'
-import { precarregarUsuarios } from '@/features/usuarios/precarregar.ts'
+import { precarregarEscolha, precarregarUsuarios } from '@/features/usuarios/precarregar.ts'
 import { clienteDaRequisicao } from '@/lib/servidor.ts'
 
 export default async function PaginaDeUsuarios() {
-  const cliente = await clienteDaRequisicao()
+  const [usuario, cliente] = await Promise.all([sessaoNoServidor(), clienteDaRequisicao()])
   return (
-    <Precarregado preparar={(consultas) => precarregarUsuarios(consultas, cliente, PRIMEIRA_PAGINA)}>
+    <Precarregado
+      preparar={async (consultas) => {
+        // A lista e, para o administrador, os professores da coluna e do filtro de responsável.
+        await Promise.all([
+          precarregarUsuarios(consultas, cliente, PRIMEIRA_PAGINA),
+          usuario?.perfil === 'ADMINISTRADOR' ? precarregarEscolha(consultas, cliente, 'PROFESSOR') : undefined,
+        ])
+      }}
+    >
       <TelaDeUsuarios />
     </Precarregado>
   )

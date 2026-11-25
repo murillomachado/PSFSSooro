@@ -6,6 +6,7 @@ import { type Ambiente, type ClienteAutenticado, criarAmbiente } from './ambient
 const URL_AVALIACOES = '/api/avaliacoes'
 const HOJE = new Date().toISOString().slice(0, 10)
 
+// Na semente, kevin.malone é aluno de dwight.schrute; pam.beesly e ryan.howard são de jim.halpert (RN6).
 describe('API de avaliações: IMC, permissões por perfil e exclusão de usuários', () => {
   let ambiente: Ambiente
   let admin: ClienteAutenticado
@@ -100,10 +101,16 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
     })
 
     it('não registra para aluno inativo (422) nem para quem não é aluno (404)', async () => {
-      const inativo = await dwight.post(URL_AVALIACOES).send(nova({ alunoId: await ambiente.idDe('ryan.howard') }))
+      const inativo = await jim.post(URL_AVALIACOES).send(nova({ alunoId: await ambiente.idDe('ryan.howard') }))
       expect(inativo.status).toBe(422)
       expect(problema(inativo).codigo).toBe('ALUNO_INATIVO')
       expect((await dwight.post(URL_AVALIACOES).send(nova({ alunoId: idJim }))).status).toBe(404)
+    })
+
+    it('o professor só avalia os seus alunos: o de outro professor é "não encontrado" (RN6)', async () => {
+      const resposta = await dwight.post(URL_AVALIACOES).send(nova({ alunoId: idPam }))
+      expect(resposta.status).toBe(404)
+      expect(problema(resposta).codigo).toBe('ALUNO_NAO_ENCONTRADO')
     })
   })
 
@@ -117,10 +124,18 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
       expect((await request(ambiente.app).get(`${URL_AVALIACOES}/faixas`)).status).toBe(401)
     })
 
-    it('professor e administrador listam todas, com filtro por aluno, professor e período', async () => {
-      const todas = pagina(await dwight.get(URL_AVALIACOES))
-      expect(todas.total).toBeGreaterThanOrEqual(5)
-      const dePam = pagina(await dwight.get(`${URL_AVALIACOES}?alunoId=${idPam}`))
+    it('o professor lista as avaliações dos seus alunos, inclusive as feitas por colegas, e só elas (RN6)', async () => {
+      const alunosDoDwight = ['Andy Bernard', 'Angela Martin', 'Kevin Malone']
+      const todas = pagina(await dwight.get(`${URL_AVALIACOES}?limite=100`))
+      expect(new Set(todas.itens.map((item) => item.aluno.nome))).toEqual(new Set(alunosDoDwight))
+      expect(todas.itens.some((item) => item.professor.id === idJim)).toBe(true)
+      expect(pagina(await dwight.get(`${URL_AVALIACOES}?alunoId=${idPam}`)).total).toBe(0)
+      const doJim = pagina(await jim.get(`${URL_AVALIACOES}?limite=100`))
+      expect(doJim.itens.some((item) => alunosDoDwight.includes(item.aluno.nome))).toBe(false)
+    })
+
+    it('com filtro por aluno, professor e período (RF5)', async () => {
+      const dePam = pagina(await jim.get(`${URL_AVALIACOES}?alunoId=${idPam}`))
       expect(dePam.itens.every((item) => item.aluno.id === idPam)).toBe(true)
       expect(dePam.total).toBe(6)
       const deJim = pagina(await admin.get(`${URL_AVALIACOES}?professorId=${idJim}`))
@@ -143,9 +158,10 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
       ])
     })
 
-    it('o aluno não abre a avaliação de outro (404); o professor abre (200)', async () => {
+    it('a avaliação de um aluno abre para o professor dele (200), e não para outro aluno ou professor (404)', async () => {
       const doKevin = pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idKevin}`)).itens[0]
       expect((await pam.get(`${URL_AVALIACOES}/${doKevin?.id}`)).status).toBe(404)
+      expect((await jim.get(`${URL_AVALIACOES}/${doKevin?.id}`)).status).toBe(404)
       expect((await dwight.get(`${URL_AVALIACOES}/${doKevin?.id}`)).status).toBe(200)
     })
 
@@ -156,12 +172,14 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
   })
 
   describe('editar e excluir (RN2, RN5)', () => {
-    it('o professor corrige a própria avaliação, e o IMC é recalculado; a de outro dá 403', async () => {
+    it('o professor corrige a própria avaliação, e o IMC é recalculado; a de um colega no seu aluno dá 403', async () => {
       const criada = avaliacao(await dwight.post(URL_AVALIACOES).send(nova()))
       const editada = await dwight.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 95 })
       expect(editada.status).toBe(200)
       expect(avaliacao(editada)).toMatchObject({ pesoKg: 95, imc: 31, classificacao: { codigo: 'OBESIDADE_I' } })
-      expect((await jim.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 70 })).status).toBe(403)
+      expect((await jim.put(`${URL_AVALIACOES}/${criada.id}`).send({ pesoKg: 70 })).status).toBe(404)
+      const doJimNoKevin = pagina(await admin.get(`${URL_AVALIACOES}?alunoId=${idKevin}&professorId=${idJim}`)).itens[0]
+      expect((await dwight.put(`${URL_AVALIACOES}/${doJimNoKevin?.id}`).send({ pesoKg: 70 })).status).toBe(403)
     })
 
     it('o administrador edita qualquer uma; o aluno não edita nem exclui', async () => {
@@ -184,7 +202,7 @@ describe('API de avaliações: IMC, permissões por perfil e exclusão de usuár
     const NOVO = { nome: 'Fábio Rocha', usuario: 'aluno.fabio', senha: 'senha1234', perfil: 'ALUNO' }
 
     it('exclui um usuário sem avaliações (204) e recusa quem tem (409), sem apagar o histórico', async () => {
-      const criado = (await admin.post('/api/usuarios').send(NOVO)).body as { id: string }
+      const criado = (await admin.post('/api/usuarios').send({ ...NOVO, professorId: idDwight })).body as { id: string }
       expect((await admin.delete(`/api/usuarios/${criado.id}`)).status).toBe(204)
       expect((await admin.get(`/api/usuarios/${criado.id}`)).status).toBe(404)
 

@@ -22,6 +22,7 @@ const PAULO = {
   usuario: 'prof.paulo',
   perfil: 'PROFESSOR' as const,
   ativo: true,
+  professorId: null,
   criadoEm: 'x',
   atualizadoEm: 'x',
 }

@@ -33,12 +33,18 @@ describe('EditarAvaliacao', () => {
     expect(await avaliacoes.buscarPorId('av-1')).toEqual(resultado.avaliacao)
   })
 
-  it('o professor vê, mas não edita, a avaliação de outro professor (403, e não 404)', async () => {
-    const { editar } = await montar()
-    await expect(editar.executar(comoCarla, 'av-1', { pesoKg: 80 })).rejects.toMatchObject({
+  it('o professor vê, mas não edita, a avaliação que um colega fez num aluno seu (403, e não 404)', async () => {
+    const { editar, avaliacoes } = await montar()
+    await avaliacoes.salvar(novaAvaliacao({ id: 'av-carla', alunoId: ANA.id, professorId: CARLA.id }))
+    await expect(editar.executar(comoPaulo, 'av-carla', { pesoKg: 80 })).rejects.toMatchObject({
       status: 403,
       codigo: 'AVALIACAO_DE_OUTRO_PROFESSOR',
     })
+  })
+
+  it('a avaliação de um aluno que não é seu nem aparece para o professor (404, RN6)', async () => {
+    const { editar } = await montar()
+    await expect(editar.executar(comoCarla, 'av-1', { pesoKg: 80 })).rejects.toMatchObject({ status: 404 })
   })
 
   it('o administrador edita qualquer avaliação, inclusive trocando aluno e avaliador (RN2)', async () => {
@@ -90,8 +96,8 @@ describe('EditarAvaliacao', () => {
 
 describe('ExcluirAvaliacao', () => {
   it('só o administrador exclui (RN2)', async () => {
-    const { avaliacoes } = await cenario(novaAvaliacao({ id: 'av-1', professorId: PAULO.id }))
-    const excluir = new ExcluirAvaliacao(avaliacoes)
+    const { usuarios, avaliacoes } = await cenario(novaAvaliacao({ id: 'av-1', professorId: PAULO.id }))
+    const excluir = new ExcluirAvaliacao(avaliacoes, usuarios)
     await expect(excluir.executar(comoPaulo, 'av-1')).rejects.toMatchObject({ status: 403 })
     await expect(excluir.executar(comoAna, 'av-1')).rejects.toMatchObject({ status: 403 })
     await excluir.executar(ADMIN, 'av-1')

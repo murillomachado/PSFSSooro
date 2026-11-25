@@ -13,6 +13,7 @@ export class MemoriaAvaliacaoRepository implements AvaliacaoRepository {
   listar(filtros: FiltrosDeAvaliacao): Promise<PaginaDe<Avaliacao>> {
     const filtradas = [...this.avaliacoes.values()]
       .filter((a) => filtros.alunoId === undefined || a.alunoId === filtros.alunoId)
+      .filter((a) => filtros.alunoIds === undefined || filtros.alunoIds.includes(a.alunoId))
       .filter((a) => filtros.professorId === undefined || a.professorId === filtros.professorId)
       .filter((a) => filtros.de === undefined || a.dataAvaliacao >= filtros.de)
       .filter((a) => filtros.ate === undefined || a.dataAvaliacao <= filtros.ate)

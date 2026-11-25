@@ -37,6 +37,29 @@ describe('semear', () => {
     expect(pagina.itens.every((usuario) => usuario.senhaHash === `hash(${SENHA_DEMO})`)).toBe(true)
   })
 
+  it('cada aluno tem um professor responsável, com alunos para os dois professores (RN6)', async () => {
+    const { usuarios, dependencias } = await montar()
+    await semear(dependencias)
+    const alunosDe = async (professor: string) => {
+      const id = (await usuarios.buscarPorUsuario(professor))?.id ?? ''
+      const pagina = await usuarios.listar({ perfis: ['ALUNO'], professorId: id, pagina: 1, limite: 50 })
+      return pagina.itens.map((aluno) => aluno.usuario)
+    }
+    expect(await alunosDe('dwight.schrute')).toEqual(['andy.bernard', 'angela.martin', 'kevin.malone'])
+    expect(await alunosDe('jim.halpert')).toEqual(['pam.beesly', 'ryan.howard', 'stanley.hudson'])
+  })
+
+  it('num banco semeado antes do vínculo, só preenche o professor responsável que faltava', async () => {
+    const { usuarios, dependencias } = await montar()
+    await semear(dependencias)
+    const pam = await usuarios.buscarPorUsuario('pam.beesly')
+    if (pam === undefined) throw new Error('a semente não criou a aluna')
+    await usuarios.salvar({ ...pam, professorId: undefined })
+    expect(await semear(dependencias)).toBe(0)
+    const jim = await usuarios.buscarPorUsuario('jim.halpert')
+    expect(await usuarios.buscarPorUsuario('pam.beesly')).toEqual({ ...pam, professorId: jim?.id })
+  })
+
   it('pode rodar mais de uma vez sem duplicar nem sobrescrever', async () => {
     const { usuarios, dependencias } = await montar()
     await semear(dependencias)

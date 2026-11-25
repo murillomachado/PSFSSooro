@@ -13,6 +13,8 @@ export interface FiltrosDaLista {
   readonly busca?: string
   readonly perfil?: Perfil
   readonly ativo?: boolean
+  /** Só os alunos deste professor responsável. */
+  readonly professorId?: string
 }
 
 export async function listarUsuarios(filtros: FiltrosDaLista, cliente: ClienteHttp = http): Promise<PaginaDeUsuarios> {

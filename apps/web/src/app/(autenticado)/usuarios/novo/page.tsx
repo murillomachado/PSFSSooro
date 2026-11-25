@@ -6,7 +6,7 @@ import { avisarSucesso } from '@/components/ui/Avisos.tsx'
 import { PainelDeFormulario } from '@/components/ui/PainelDeFormulario.tsx'
 import { RotaDePerfil } from '@/components/ui/RotaDePerfil.tsx'
 import { useSessao } from '@/features/auth/hooks/useSessao.ts'
-import { FormularioDeUsuario } from '@/features/usuarios/components/FormularioDeUsuario.tsx'
+import { FormularioDeUsuarioComOpcoes } from '@/features/usuarios/components/FormularioDeUsuarioComOpcoes.tsx'
 import { useCriarUsuario } from '@/features/usuarios/hooks/useUsuarios.ts'
 import { PERFIS_QUE_PODE_CADASTRAR } from '@/features/usuarios/perfis.ts'
 import { mensagemDeErro } from '@/lib/http-client.ts'
@@ -24,7 +24,8 @@ export default function PaginaDeNovoUsuario() {
         voltarPara="/usuarios"
       >
         {usuario !== undefined && (
-          <FormularioDeUsuario
+          <FormularioDeUsuarioComOpcoes
+            ehAdmin={usuario.perfil === 'ADMINISTRADOR'}
             perfisPermitidos={PERFIS_QUE_PODE_CADASTRAR[usuario.perfil]}
             enviando={isPending}
             erro={error === null ? undefined : mensagemDeErro(error)}

@@ -10,7 +10,12 @@ import { Paginacao } from '@/components/ui/Paginacao.tsx'
 import { mensagemDeErro } from '@/lib/http-client.ts'
 import { usePaginaValida } from '@/lib/usePaginaValida.ts'
 import { PRIMEIRA_PAGINA } from '../chaves.ts'
-import { useAlterarSituacao, useExcluirUsuario, useListaDeUsuarios } from '../hooks/useUsuarios.ts'
+import {
+  useAlterarSituacao,
+  useExcluirUsuario,
+  useListaDeUsuarios,
+  useUsuariosParaEscolha,
+} from '../hooks/useUsuarios.ts'
 import type { FiltrosDaLista } from '../services/usuarios.service.ts'
 import { FiltrosDeUsuarios } from './FiltrosDeUsuarios.tsx'
 import { TabelaDeUsuarios } from './TabelaDeUsuarios.tsx'
@@ -21,6 +26,10 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
   const lista = useListaDeUsuarios(filtros)
   const situacao = useAlterarSituacao()
   const exclusao = useExcluirUsuario()
+  const ehAdmin = perfilDoAtor === 'ADMINISTRADOR'
+  // O administrador vê e filtra o professor responsável de cada aluno (RN6).
+  const professores = useUsuariosParaEscolha('PROFESSOR', false, ehAdmin).data?.itens
+  const nomesDosProfessores = ehAdmin ? new Map((professores ?? []).map((p) => [p.id, p.nome])) : undefined
 
   usePaginaValida(
     lista.data,
@@ -47,7 +56,8 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
   return (
     <>
       <FiltrosDeUsuarios
-        mostrarPerfil={perfilDoAtor === 'ADMINISTRADOR'}
+        mostrarPerfil={ehAdmin}
+        professores={ehAdmin ? (professores ?? []).map((p) => ({ valor: p.id, texto: p.nome })) : undefined}
         aoFiltrar={(novos) => {
           definirFiltros({ ...novos, pagina: 1 })
         }}
@@ -60,6 +70,7 @@ export function ListaDeUsuarios({ perfilDoAtor }: Readonly<{ perfilDoAtor: Perfi
           <TabelaDeUsuarios
             usuarios={lista.data.itens}
             perfilDoAtor={perfilDoAtor}
+            professores={nomesDosProfessores}
             aoAlterarSituacao={(usuario) => {
               exclusao.reset()
               situacao.mutate(

@@ -12,22 +12,25 @@ interface UsuarioDemo {
   readonly usuario: string
   readonly perfil: Perfil
   readonly ativo: boolean
+  /** O nome de usuário do professor responsável, para alunos. */
+  readonly professor?: string
 }
-
-export const USUARIOS_DEMO: readonly UsuarioDemo[] = [
-  { nome: 'Michael Scott', usuario: 'michael.scott', perfil: 'ADMINISTRADOR', ativo: true },
-  { nome: 'Dwight Schrute', usuario: 'dwight.schrute', perfil: 'PROFESSOR', ativo: true },
-  { nome: 'Jim Halpert', usuario: 'jim.halpert', perfil: 'PROFESSOR', ativo: true },
-  { nome: 'Pam Beesly', usuario: 'pam.beesly', perfil: 'ALUNO', ativo: true },
-  { nome: 'Kevin Malone', usuario: 'kevin.malone', perfil: 'ALUNO', ativo: true },
-  { nome: 'Stanley Hudson', usuario: 'stanley.hudson', perfil: 'ALUNO', ativo: true },
-  { nome: 'Andy Bernard', usuario: 'andy.bernard', perfil: 'ALUNO', ativo: true },
-  { nome: 'Angela Martin', usuario: 'angela.martin', perfil: 'ALUNO', ativo: true },
-  { nome: 'Ryan Howard', usuario: 'ryan.howard', perfil: 'ALUNO', ativo: false },
-]
 
 const DWIGHT = 'dwight.schrute'
 const JIM = 'jim.halpert'
+
+/** Os professores vêm antes dos alunos, porque cada aluno aponta para o seu professor responsável (RN6). */
+export const USUARIOS_DEMO: readonly UsuarioDemo[] = [
+  { nome: 'Michael Scott', usuario: 'michael.scott', perfil: 'ADMINISTRADOR', ativo: true },
+  { nome: 'Dwight Schrute', usuario: DWIGHT, perfil: 'PROFESSOR', ativo: true },
+  { nome: 'Jim Halpert', usuario: JIM, perfil: 'PROFESSOR', ativo: true },
+  { nome: 'Pam Beesly', usuario: 'pam.beesly', perfil: 'ALUNO', ativo: true, professor: JIM },
+  { nome: 'Kevin Malone', usuario: 'kevin.malone', perfil: 'ALUNO', ativo: true, professor: DWIGHT },
+  { nome: 'Stanley Hudson', usuario: 'stanley.hudson', perfil: 'ALUNO', ativo: true, professor: JIM },
+  { nome: 'Andy Bernard', usuario: 'andy.bernard', perfil: 'ALUNO', ativo: true, professor: DWIGHT },
+  { nome: 'Angela Martin', usuario: 'angela.martin', perfil: 'ALUNO', ativo: true, professor: DWIGHT },
+  { nome: 'Ryan Howard', usuario: 'ryan.howard', perfil: 'ALUNO', ativo: false, professor: JIM },
+]
 
 interface HistoricoDemo {
   readonly aluno: string
@@ -130,10 +133,16 @@ export async function semear({ usuarios, avaliacoes, hasher, relogio, gerarId }:
   const agora = relogio.agora().toISOString()
   const senhaHash = await hasher.gerar(SENHA_DEMO)
   let criados = 0
-  for (const demo of USUARIOS_DEMO) {
-    if ((await usuarios.buscarPorUsuario(demo.usuario)) !== undefined) continue
-    await usuarios.salvar({ id: gerarId(), ...demo, senhaHash, criadoEm: agora, atualizadoEm: agora })
-    criados += 1
+  for (const { professor, ...demo } of USUARIOS_DEMO) {
+    const professorId = professor === undefined ? undefined : (await usuarios.buscarPorUsuario(professor))?.id
+    const existente = await usuarios.buscarPorUsuario(demo.usuario)
+    if (existente === undefined) {
+      await usuarios.salvar({ id: gerarId(), ...demo, professorId, senhaHash, criadoEm: agora, atualizadoEm: agora })
+      criados += 1
+    } else if (existente.perfil === 'ALUNO' && existente.professorId === undefined && professorId !== undefined) {
+      // Um banco semeado antes do vínculo com o professor ganha o responsável, sem mudar mais nada.
+      await usuarios.salvar({ ...existente, professorId })
+    }
   }
   await semearAvaliacoes({ usuarios, avaliacoes, hasher, relogio, gerarId })
   return criados

@@ -4,6 +4,7 @@ import type { Ator } from '../../../shared/security/ator.ts'
 import type { HasherDeSenha, Relogio } from '../../../shared/security/portas.ts'
 import { atorGerencia } from '../domain/politicas.ts'
 import type { Usuario } from '../domain/usuario.ts'
+import { definirResponsavel } from './professor-responsavel.ts'
 import { garantirUsuarioLivre } from './regras-compartilhadas.ts'
 import type { UsuarioRepository } from './usuario-repository.ts'
 
@@ -19,6 +20,10 @@ export class CriarUsuario {
     if (!atorGerencia(ator, entrada.perfil)) {
       throw new SemPermissao('Você não pode cadastrar usuários com este perfil.', 'PERFIL_NAO_PERMITIDO')
     }
+    const professorId = await definirResponsavel(this.usuarios, ator, {
+      perfil: entrada.perfil,
+      informado: entrada.professorId,
+    })
     await garantirUsuarioLivre(this.usuarios, entrada.usuario)
     const agora = this.relogio.agora().toISOString()
     const usuario: Usuario = {
@@ -28,6 +33,7 @@ export class CriarUsuario {
       senhaHash: await this.hasher.gerar(entrada.senha),
       perfil: entrada.perfil,
       ativo: true,
+      ...(professorId === undefined ? {} : { professorId }),
       criadoEm: agora,
       atualizadoEm: agora,
     }

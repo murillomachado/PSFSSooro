@@ -3,7 +3,8 @@ import { Conflito, RegraDeNegocio, SemPermissao } from '../../../shared/errors/e
 import type { Ator } from '../../../shared/security/ator.ts'
 import type { HasherDeSenha, Relogio } from '../../../shared/security/portas.ts'
 import type { Usuario } from '../domain/usuario.ts'
-import { garantirUsuarioLivre, localizarVisivel } from './regras-compartilhadas.ts'
+import { definirResponsavel } from './professor-responsavel.ts'
+import { garantirSemAlunos, garantirUsuarioLivre, localizarVisivel } from './regras-compartilhadas.ts'
 import type { UsuarioRepository } from './usuario-repository.ts'
 import type { VinculosDoUsuario } from './vinculos.ts'
 
@@ -21,11 +22,17 @@ export class EditarUsuario {
     if (perfil !== alvo.perfil) await this.validarTrocaDePerfil(ator, alvo)
     const login = entrada.usuario ?? alvo.usuario
     if (login !== alvo.usuario) await garantirUsuarioLivre(this.usuarios, login)
+    const professorId = await definirResponsavel(this.usuarios, ator, {
+      perfil,
+      informado: entrada.professorId,
+      atual: alvo.professorId,
+    })
     const atualizado: Usuario = {
       ...alvo,
       nome: entrada.nome ?? alvo.nome,
       usuario: login,
       perfil,
+      professorId,
       senhaHash: entrada.senha === undefined ? alvo.senhaHash : await this.hasher.gerar(entrada.senha),
       atualizadoEm: this.relogio.agora().toISOString(),
     }
@@ -41,6 +48,7 @@ export class EditarUsuario {
     if (alvo.perfil === 'ADMINISTRADOR' && alvo.ativo && (await this.usuarios.contarAdministradoresAtivos()) <= 1) {
       throw new RegraDeNegocio('O último administrador ativo não pode mudar de perfil.', 'ULTIMO_ADMINISTRADOR')
     }
+    await garantirSemAlunos(this.usuarios, alvo, 'mudar de perfil')
     // Quem já tem avaliações como aluno ou professor perderia o sentido delas ao mudar de perfil (D8).
     if (await this.vinculos.possuiAvaliacoes(alvo.id)) {
       throw new Conflito('Este usuário tem avaliações vinculadas e não pode mudar de perfil.', 'USUARIO_COM_AVALIACOES')

@@ -9,6 +9,8 @@ export interface Usuario {
   readonly senhaHash: string
   readonly perfil: Perfil
   readonly ativo: boolean
+  /** Só para alunos: o professor responsável, que vê e avalia o aluno (RN6). */
+  readonly professorId?: string
   readonly criadoEm: string
   readonly atualizadoEm: string
 }

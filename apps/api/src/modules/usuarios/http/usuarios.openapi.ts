@@ -10,14 +10,14 @@ import {
 import { type Caminhos, operacao } from '../../../shared/http/openapi.ts'
 
 const TAG = 'Usuários'
-const EQUIPE = 'administrador e professor (o professor só vê e cadastra alunos)'
+const EQUIPE = 'administrador e professor (o professor só vê e cadastra os próprios alunos)'
 const UM_USUARIO = { status: 200, descricao: 'O usuário', schema: usuarioRespostaSchema }
 
 /** A documentação de /api/usuarios, ao lado das rotas que ela descreve. */
 export const CAMINHOS_DE_USUARIOS: Caminhos = {
   '/api/usuarios': {
     get: operacao({
-      resumo: 'Listar usuários, com busca e filtros (RN4)',
+      resumo: 'Listar usuários, com busca e filtros, inclusive pelo professor responsável (RN4, RN6)',
       tag: TAG,
       perfis: EQUIPE,
       consulta: listarUsuariosQuerySchema,
@@ -25,12 +25,12 @@ export const CAMINHOS_DE_USUARIOS: Caminhos = {
       erros: [400, 401, 403],
     }),
     post: operacao({
-      resumo: 'Cadastrar um usuário (RF1, RN1, RN4)',
+      resumo: 'Cadastrar um usuário; todo aluno tem um professor responsável (RF1, RN1, RN4, RN6)',
       tag: TAG,
       perfis: EQUIPE,
       corpo: criarUsuarioSchema,
       sucesso: { ...UM_USUARIO, status: 201, descricao: 'O usuário criado' },
-      erros: [400, 401, 403, 409],
+      erros: [400, 401, 403, 404, 409, 422],
     }),
   },
   '/api/usuarios/{id}': {
@@ -43,7 +43,7 @@ export const CAMINHOS_DE_USUARIOS: Caminhos = {
       erros: [400, 401, 403, 404],
     }),
     put: operacao({
-      resumo: 'Editar um usuário (RF1, RN1, RN4)',
+      resumo: 'Editar um usuário; o administrador transfere o aluno de professor (RF1, RN1, RN4, RN6)',
       tag: TAG,
       perfis: EQUIPE,
       caminho: idSchema,
@@ -52,7 +52,7 @@ export const CAMINHOS_DE_USUARIOS: Caminhos = {
       erros: [400, 401, 403, 404, 409, 422],
     }),
     delete: operacao({
-      resumo: 'Excluir um usuário sem avaliações (RN1)',
+      resumo: 'Excluir um usuário sem avaliações nem alunos (RN1)',
       tag: TAG,
       perfis: 'administrador',
       caminho: idSchema,

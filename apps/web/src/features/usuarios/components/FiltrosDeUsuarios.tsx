@@ -3,7 +3,7 @@
 import { perfilSchema } from '@psfssooro/contracts'
 import { useState } from 'react'
 import { BarraDeFiltros } from '@/components/ui/BarraDeFiltros.tsx'
-import { CampoDeSelecao } from '@/components/ui/CampoDeSelecao.tsx'
+import { CampoDeSelecao, type Opcao } from '@/components/ui/CampoDeSelecao.tsx'
 import { CampoDeTexto } from '@/components/ui/CampoDeTexto.tsx'
 import { OPCOES_DE_PERFIL } from '../perfis.ts'
 import type { FiltrosDaLista } from '../services/usuarios.service.ts'
@@ -19,13 +19,16 @@ const OPCOES_DO_FILTRO_DE_PERFIL = [{ valor: '', texto: 'Todos' }, ...OPCOES_DE_
 interface FiltrosDeUsuariosProps {
   /** O professor só lista alunos, então o filtro de perfil só aparece para o administrador. */
   readonly mostrarPerfil: boolean
+  /** Os professores, para filtrar os alunos de cada um (RN6). Só o administrador recebe. */
+  readonly professores?: readonly Opcao[]
   readonly aoFiltrar: (filtros: Omit<FiltrosDaLista, 'pagina'>) => void
 }
 
-export function FiltrosDeUsuarios({ mostrarPerfil, aoFiltrar }: Readonly<FiltrosDeUsuariosProps>) {
+export function FiltrosDeUsuarios({ mostrarPerfil, professores, aoFiltrar }: Readonly<FiltrosDeUsuariosProps>) {
   const [busca, definirBusca] = useState('')
   const [perfil, definirPerfil] = useState('')
   const [situacao, definirSituacao] = useState('')
+  const [professorId, definirProfessorId] = useState('')
 
   const filtrar = () => {
     const perfilEscolhido = perfilSchema.safeParse(perfil)
@@ -33,12 +36,14 @@ export function FiltrosDeUsuarios({ mostrarPerfil, aoFiltrar }: Readonly<Filtros
       busca: busca.trim(),
       ...(perfilEscolhido.success ? { perfil: perfilEscolhido.data } : {}),
       ...(situacao === '' ? {} : { ativo: situacao === 'true' }),
+      ...(professorId === '' ? {} : { professorId }),
     })
   }
   const limpar = () => {
     definirBusca('')
     definirPerfil('')
     definirSituacao('')
+    definirProfessorId('')
     aoFiltrar({})
   }
 
@@ -59,6 +64,16 @@ export function FiltrosDeUsuarios({ mostrarPerfil, aoFiltrar }: Readonly<Filtros
           value={perfil}
           onChange={(e) => {
             definirPerfil(e.target.value)
+          }}
+        />
+      )}
+      {professores !== undefined && (
+        <CampoDeSelecao
+          rotulo="Professor responsável"
+          opcoes={[{ valor: '', texto: 'Todos' }, ...professores]}
+          value={professorId}
+          onChange={(e) => {
+            definirProfessorId(e.target.value)
           }}
         />
       )}

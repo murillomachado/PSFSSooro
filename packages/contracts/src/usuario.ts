@@ -30,7 +30,13 @@ export const loginSchema = z.object(
   CORPO_JSON,
 )
 
-export const criarUsuarioSchema = z.object({ nome, usuario, senha, perfil: perfilSchema }, CORPO_JSON)
+/** O professor responsável pelo aluno (RN6). Só o administrador informa; o professor que cadastra é o responsável. */
+const professorId = z.uuid('Escolha o professor responsável')
+
+export const criarUsuarioSchema = z.object(
+  { nome, usuario, senha, perfil: perfilSchema, professorId: professorId.optional() },
+  CORPO_JSON,
+)
 
 export const editarUsuarioSchema = z.object(
   {
@@ -38,6 +44,7 @@ export const editarUsuarioSchema = z.object(
     usuario: usuario.optional(),
     senha: senha.optional(),
     perfil: perfilSchema.optional(),
+    professorId: professorId.optional(),
   },
   CORPO_JSON,
 )
@@ -50,6 +57,8 @@ export const listarUsuariosQuerySchema = paginacaoQuerySchema.extend({
   perfil: perfilSchema.optional(),
   ativo: booleanoDeTexto.optional(),
   busca: z.string('A busca precisa ser um texto').trim().max(100, 'A busca é longa demais').optional(),
+  /** Os alunos de um professor. */
+  professorId: z.uuid('Identificador do professor inválido').optional(),
 })
 
 export const usuarioRespostaSchema = z.object({
@@ -58,6 +67,8 @@ export const usuarioRespostaSchema = z.object({
   usuario: z.string(),
   perfil: perfilSchema,
   ativo: z.boolean(),
+  /** O professor responsável, só para alunos. */
+  professorId: z.string().nullable(),
   criadoEm: z.string(),
   atualizadoEm: z.string(),
 })

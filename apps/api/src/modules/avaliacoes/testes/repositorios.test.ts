@@ -40,7 +40,7 @@ describe.each([
 
   beforeEach(async () => {
     ambiente = await criar()
-    for (const usuario of [ANA, BRUNO, PAULO, CARLA]) await ambiente.usuarios.salvar(usuario)
+    for (const usuario of [PAULO, CARLA, ANA, BRUNO]) await ambiente.usuarios.salvar(usuario)
   })
   afterEach(async () => {
     await ambiente.encerrar()
@@ -101,6 +101,12 @@ describe.each([
       expect(await ids({ alunoId: ANA.id, de: '2026-09-10', ate: '2026-09-30' })).toEqual(['a1'])
     })
 
+    it('restringe a uma lista de alunos (os de um professor); lista vazia não devolve nada', async () => {
+      expect(await ids({ alunoIds: [BRUNO.id] })).toEqual(['a3'])
+      expect(await ids({ alunoIds: [ANA.id, BRUNO.id], professorId: PAULO.id })).toEqual(['a1'])
+      expect(await ids({ alunoIds: [] })).toEqual([])
+    })
+
     it('pagina, com o total do conjunto filtrado', async () => {
       const segunda = await repositorio().listar({ pagina: 2, limite: 2 })
       expect(segunda.itens.map((avaliacao) => avaliacao.id)).toEqual(['a1'])
@@ -112,8 +118,8 @@ describe.each([
 describe('integridade do banco (RN1)', () => {
   it('o SQLite recusa excluir um usuário que tem avaliação, mesmo se a aplicação falhasse', async () => {
     const ambiente = await comTypeOrm()
-    await ambiente.usuarios.salvar(ANA)
     await ambiente.usuarios.salvar(PAULO)
+    await ambiente.usuarios.salvar(ANA)
     await ambiente.repositorio.salvar(novaAvaliacao())
     await expect(ambiente.usuarios.excluir(ANA.id)).rejects.toMatchObject({
       status: 409,

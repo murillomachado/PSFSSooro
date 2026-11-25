@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { UsuarioResposta } from '@psfssooro/contracts'
 import { AxiosError, type AxiosResponse } from 'axios'
 import type { ReactNode } from 'react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -23,13 +24,16 @@ vi.mock('../services/usuarios.service.ts', () => ({
 
 const BRUNO = { ...USUARIO_EXEMPLO, id: '22222222-2222-4222-8222-222222222222', nome: 'Bruno Lima', ativo: false }
 
-function pagina(itens = [USUARIO_EXEMPLO, BRUNO], extra = {}) {
+function pagina(itens: UsuarioResposta[] = [USUARIO_EXEMPLO, BRUNO], extra = {}) {
   return { itens, total: itens.length, pagina: 1, limite: 20, ...extra }
 }
 
 describe('ListaDeUsuarios (RF2, RN1, RN4)', () => {
   beforeEach(() => {
-    vi.mocked(listarUsuarios).mockReset().mockResolvedValue(pagina())
+    // A lista de professores (da coluna e do filtro de responsável) vem vazia, salvo onde o teste diz.
+    vi.mocked(listarUsuarios)
+      .mockReset()
+      .mockImplementation((filtros) => Promise.resolve(filtros.perfil === 'PROFESSOR' ? pagina([]) : pagina()))
     vi.mocked(alterarSituacao).mockReset().mockResolvedValue(USUARIO_EXEMPLO)
     vi.mocked(excluirUsuario).mockReset().mockResolvedValue(undefined)
   })
@@ -45,6 +49,22 @@ describe('ListaDeUsuarios (RF2, RN1, RN4)', () => {
     expect(screen.getAllByRole('button', { name: 'Excluir' })).toHaveLength(2)
   })
 
+  it('o administrador vê e filtra o professor responsável de cada aluno (RN6)', async () => {
+    const idDaCarla = USUARIO_EXEMPLO.professorId ?? ''
+    const carla: UsuarioResposta = { ...USUARIO_EXEMPLO, id: idDaCarla, nome: 'Carla Professora', perfil: 'PROFESSOR' }
+    vi.mocked(listarUsuarios).mockImplementation((filtros) =>
+      Promise.resolve(filtros.perfil === 'PROFESSOR' ? pagina([{ ...carla, professorId: null }]) : pagina()),
+    )
+    renderizar(<ListaDeUsuarios perfilDoAtor="ADMINISTRADOR" />)
+    expect(await screen.findAllByText('Carla Professora')).not.toHaveLength(0)
+    const pessoa = userEvent.setup()
+    await pessoa.selectOptions(screen.getByLabelText('Professor responsável'), 'Carla Professora')
+    await pessoa.click(screen.getByRole('button', { name: 'Filtrar' }))
+    await waitFor(() => {
+      expect(listarUsuarios).toHaveBeenCalledWith(expect.objectContaining({ professorId: USUARIO_EXEMPLO.professorId }))
+    })
+  })
+
   it('o professor só edita: não vê ativar, inativar nem excluir, nem o filtro de perfil', async () => {
     renderizar(<ListaDeUsuarios perfilDoAtor="PROFESSOR" />)
     expect(await screen.findByText('Ana Souza')).toBeDefined()
@@ -52,6 +72,7 @@ describe('ListaDeUsuarios (RF2, RN1, RN4)', () => {
     expect(screen.queryByRole('button', { name: 'Inativar' })).toBeNull()
     expect(screen.queryByRole('button', { name: 'Excluir' })).toBeNull()
     expect(screen.queryByLabelText('Perfil')).toBeNull()
+    expect(screen.queryByLabelText('Professor responsável')).toBeNull()
   })
 
   it('inativa um usuário ativo e ativa um inativo', async () => {

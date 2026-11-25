@@ -18,6 +18,7 @@ const USUARIO = {
   usuario: 'admin',
   perfil: 'ADMINISTRADOR' as const,
   ativo: true,
+  professorId: null,
   criadoEm: 'x',
   atualizadoEm: 'x',
 }

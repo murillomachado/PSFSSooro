@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { entrarComSucesso, linhaCom, sufixo } from './apoio.ts'
 
-test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
+test.describe('RF1, RF2, RN1, RN4 e RN6: usuários', () => {
   test('o administrador cadastra, edita, inativa, reativa e exclui um professor', async ({ page }) => {
     const nome = `Marta ${sufixo()}`
     const login = `prof.${sufixo()}`
@@ -56,7 +56,9 @@ test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
     const nome = `Aluno ${sufixo()}`
     await entrarComSucesso(page, 'dwight.schrute')
     await page.getByRole('link', { name: 'Alunos' }).click()
-    await expect(linhaCom(page, 'Pam Beesly')).toBeVisible()
+    // RN6: lista só os alunos de quem é o responsável.
+    await expect(linhaCom(page, 'Kevin Malone')).toBeVisible()
+    await expect(linhaCom(page, 'Pam Beesly')).toHaveCount(0)
     await expect(page.locator('tbody tr', { hasText: 'Professor' })).toHaveCount(0)
     await expect(page.getByRole('button', { name: /Inativar|Excluir/ })).toHaveCount(0)
 
@@ -67,6 +69,20 @@ test.describe('RF1, RF2, RN1 e RN4: usuários', () => {
     await page.getByLabel('Senha', { exact: true }).fill('senha1234')
     await page.getByRole('button', { name: 'Cadastrar' }).click()
     await expect(linhaCom(page, nome)).toContainText('Aluno')
+  })
+
+  test('o administrador vê o professor responsável de cada aluno e filtra por ele (RN6)', async ({ page }) => {
+    await entrarComSucesso(page, 'michael.scott')
+    await page.goto('/usuarios')
+    await expect(linhaCom(page, 'Pam Beesly')).toContainText('Jim Halpert')
+    await page.getByLabel('Professor responsável').selectOption({ label: 'Dwight Schrute' })
+    await page.getByRole('button', { name: 'Filtrar' }).click()
+    await expect(linhaCom(page, 'Pam Beesly')).toHaveCount(0)
+    await expect(linhaCom(page, 'Kevin Malone')).toContainText('Dwight Schrute')
+
+    await page.goto('/usuarios/novo')
+    await page.getByLabel('Perfil', { exact: true }).selectOption({ label: 'Aluno' })
+    await expect(page.getByLabel('Professor responsável')).toBeVisible()
   })
 
   test('o aluno não acessa a área de usuários', async ({ page }) => {

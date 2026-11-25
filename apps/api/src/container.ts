@@ -73,7 +73,7 @@ export function montarApp(env: Env, banco: DataSource): Express {
     obter: new ObterAvaliacao(avaliacoes, usuarios),
     registrar: new RegistrarAvaliacao(avaliacoes, usuarios, relogioDoSistema, randomUUID),
     editar: new EditarAvaliacao(avaliacoes, usuarios, relogioDoSistema),
-    excluir: new ExcluirAvaliacao(avaliacoes),
+    excluir: new ExcluirAvaliacao(avaliacoes, usuarios),
   })
 
   return criarApp({

@@ -9,6 +9,8 @@ import { NOME_DO_PERFIL } from '../perfis.ts'
 interface TabelaDeUsuariosProps {
   readonly usuarios: readonly UsuarioResposta[]
   readonly perfilDoAtor: Perfil
+  /** O nome de cada professor pelo id, para a coluna do responsável (só o administrador vê). */
+  readonly professores?: ReadonlyMap<string, string>
   readonly aoAlterarSituacao: (usuario: UsuarioResposta) => void
   readonly aoExcluir: (usuario: UsuarioResposta) => void
 }
@@ -27,10 +29,17 @@ const COLUNAS: readonly Coluna<UsuarioResposta>[] = [
   },
 ]
 
+/** A coluna do professor responsável pelo aluno (RN6); quem não é aluno não tem. */
+const colunaDoResponsavel = (professores: ReadonlyMap<string, string>): Coluna<UsuarioResposta> => ({
+  titulo: 'Professor',
+  valor: (u) => (u.professorId === null ? '—' : (professores.get(u.professorId) ?? '—')),
+})
+
 /** Só o administrador ativa, inativa e exclui (RF2, RN1); administrador e professor editam. */
 export function TabelaDeUsuarios({
   usuarios,
   perfilDoAtor,
+  professores,
   aoAlterarSituacao,
   aoExcluir,
 }: Readonly<TabelaDeUsuariosProps>) {
@@ -38,7 +47,7 @@ export function TabelaDeUsuarios({
   return (
     <TabelaResponsiva
       itens={usuarios}
-      colunas={COLUNAS}
+      colunas={professores === undefined ? COLUNAS : [...COLUNAS, colunaDoResponsavel(professores)]}
       chave={(u) => u.id}
       vazio="Nenhum usuário encontrado."
       acoes={(usuario) => (

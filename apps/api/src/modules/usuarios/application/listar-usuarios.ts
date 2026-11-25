@@ -16,6 +16,8 @@ export class ListarUsuarios {
       perfis,
       ativo: consulta.ativo,
       busca: consulta.busca,
+      // O professor lista só os próprios alunos (RN6), qualquer que seja o filtro pedido.
+      professorId: ator.perfil === 'PROFESSOR' ? ator.id : consulta.professorId,
       pagina: consulta.pagina,
       limite: consulta.limite,
     })

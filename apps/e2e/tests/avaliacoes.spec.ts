@@ -29,12 +29,13 @@ test.describe('RF3, RF4, RF5, RN2, RN3, RN5, RN6, RN7 e RN9: avaliações', () =
     await expect(linhaCom(page, 'Kevin Malone').first()).toContainText('Peso normal')
   })
 
-  test('o formulário valida os campos e só oferece alunos ativos (RN9)', async ({ page }) => {
-    await entrarComSucesso(page, 'dwight.schrute')
+  test('o formulário valida os campos e só oferece os alunos ativos do professor (RN6, RN9)', async ({ page }) => {
+    await entrarComSucesso(page, 'jim.halpert')
     await page.goto('/avaliacoes/nova')
     const opcoes = page.getByLabel('Aluno', { exact: true }).locator('option')
     await expect(opcoes.filter({ hasText: 'Pam Beesly' })).toHaveCount(1)
     await expect(opcoes.filter({ hasText: 'Ryan Howard' })).toHaveCount(0)
+    await expect(opcoes.filter({ hasText: 'Kevin Malone' })).toHaveCount(0)
     await page.getByRole('button', { name: 'Registrar avaliação' }).click()
     await expect(page.getByText('Escolha o aluno')).toBeVisible()
     await expect(page.getByText('Informe a altura')).toBeVisible()
@@ -44,6 +45,16 @@ test.describe('RF3, RF4, RF5, RN2, RN3, RN5, RN6, RN7 e RN9: avaliações', () =
     await page.getByRole('button', { name: 'Registrar avaliação' }).click()
     await expect(page.getByText('A altura mínima é 0,50 m')).toBeVisible()
     await expect(page.getByText('O peso mínimo é 10 kg')).toBeVisible()
+  })
+
+  test('o professor vê só as avaliações dos seus alunos, inclusive as feitas por colegas (RN6)', async ({ page }) => {
+    await entrarComSucesso(page, 'dwight.schrute')
+    await page.goto('/avaliacoes')
+    await expect(page.locator('tbody tr').first()).toBeVisible()
+    const alunos = await page.locator('tbody tr td:nth-child(2)').allInnerTexts()
+    expect(new Set(alunos)).toEqual(new Set(['Andy Bernard', 'Angela Martin', 'Kevin Malone']))
+    const opcoes = page.getByLabel('Aluno', { exact: true }).locator('option')
+    await expect(opcoes.filter({ hasText: 'Pam Beesly' })).toHaveCount(0)
   })
 
   test('o professor edita só as suas avaliações; nas de outro professor não há botão (RN5)', async ({ page }) => {

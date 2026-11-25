@@ -49,7 +49,10 @@ describe('CriarUsuario', () => {
 
   it('recusa um nome de usuário que já existe', async () => {
     const { criar } = await montar(novoUsuario({ usuario: 'aluno.bruno' }))
-    await expect(criar.executar(ADMIN, cadastro)).rejects.toMatchObject({ status: 409, codigo: 'USUARIO_JA_EXISTE' })
+    await expect(criar.executar(PROFESSOR, cadastro)).rejects.toMatchObject({
+      status: 409,
+      codigo: 'USUARIO_JA_EXISTE',
+    })
   })
 })
 
