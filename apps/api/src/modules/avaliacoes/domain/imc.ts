@@ -19,13 +19,14 @@ export const FAIXAS_IMC: readonly FaixaImc[] = [
 ]
 
 /**
- * IMC arredondado para uma casa, em décimos (22,9 vira 229). A conta é toda em inteiros, para o
- * arredondamento ser exato: IMC × 10 = gramas × 100 ÷ cm², com a metade arredondada para cima.
+ * IMC truncado na primeira casa, em décimos (22,96 vira 229). A conta é toda em inteiros, para ser
+ * exata: IMC × 10 = gramas × 100 ÷ cm², sem as casas seguintes. Truncar, e não arredondar, resolve o
+ * que a tabela da especificação deixa entre uma linha e outra (24,95 não está em 18,5–24,9 nem em
+ * 25–29,9): como as faixas começam em múltiplos de 0,1, o valor truncado cai sempre na mesma faixa
+ * que o IMC exato, e o número exibido nunca contradiz a classificação (24,96 é 24,9 e Peso normal).
  */
 export function calcularImcEmDecimos(alturaCm: number, pesoG: number): number {
-  const numerador = pesoG * 100
-  const denominador = alturaCm * alturaCm
-  return Math.floor((2 * numerador + denominador) / (2 * denominador))
+  return Math.floor((pesoG * 100) / (alturaCm * alturaCm))
 }
 
 /** A faixa de um IMC em décimos: a última cujo início não passa dele. O catálogo vem ordenado e começa em zero. */

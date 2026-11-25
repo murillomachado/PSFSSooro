@@ -3,18 +3,18 @@ import { FAIXAS_IMC, calcularImcEmDecimos, classificar } from './imc.ts'
 import { emCentimetros, emGramas, emMetros, emQuilos } from './medidas.ts'
 
 describe('calcularImcEmDecimos', () => {
-  it('calcula o IMC em décimos, em inteiros: 70 kg com 1,75 m dá 22,9', () => {
-    expect(calcularImcEmDecimos(175, 70_000)).toBe(229)
+  it('calcula o IMC em décimos, em inteiros: 70 kg com 1,75 m (22,857) dá 22,8', () => {
+    expect(calcularImcEmDecimos(175, 70_000)).toBe(228)
   })
 
-  it('arredonda para uma casa antes de classificar: 80 kg com 1,79 m (24,968) vira 25,0', () => {
-    expect(calcularImcEmDecimos(179, 80_000)).toBe(250)
+  it('trunca na primeira casa, sem arredondar: 80 kg com 1,79 m (24,968) fica 24,9', () => {
+    expect(calcularImcEmDecimos(179, 80_000)).toBe(249)
   })
 
-  it('arredonda metade para cima, sem erro de ponto flutuante', () => {
-    // 100 cm e 18,05 kg: 18,05 exato, que fica entre 18,0 e 18,1 e sobe para 18,1.
-    expect(calcularImcEmDecimos(100, 18_050)).toBe(181)
-    expect(calcularImcEmDecimos(100, 18_049)).toBe(180)
+  it('trunca sem erro de ponto flutuante', () => {
+    // 100 cm: o IMC exato é o peso em kg. 18,099 fica 18,0; 18,100 é 18,1.
+    expect(calcularImcEmDecimos(100, 18_099)).toBe(180)
+    expect(calcularImcEmDecimos(100, 18_100)).toBe(181)
   })
 })
 
@@ -25,23 +25,38 @@ describe('classificar: as fronteiras da tabela da especificação', () => {
 
   it.each([
     [18_400, 'Abaixo do peso'],
+    [18_499, 'Abaixo do peso'],
     [18_500, 'Peso normal'],
     [24_900, 'Peso normal'],
+    [24_999, 'Peso normal'],
     [25_000, 'Sobrepeso'],
+    [29_999, 'Sobrepeso'],
     [29_900, 'Sobrepeso'],
     [30_000, 'Obesidade grau I'],
     [34_900, 'Obesidade grau I'],
     [35_000, 'Obesidade grau II'],
     [39_900, 'Obesidade grau II'],
+    [39_999, 'Obesidade grau II'],
     [40_000, 'Obesidade grau III'],
     [55_000, 'Obesidade grau III'],
   ])('IMC de %d g por metro quadrado: %s', (pesoEmGramas, esperada) => {
     expect(classificacaoDe(pesoEmGramas)).toBe(esperada)
   })
 
-  it('o caso arredondado (24,968 vira 25,0) é Sobrepeso, e 70 kg com 1,75 m é Peso normal', () => {
-    expect(classificar(calcularImcEmDecimos(179, 80_000)).codigo).toBe('SOBREPESO')
-    expect(classificar(calcularImcEmDecimos(175, 70_000)).codigo).toBe('PESO_NORMAL')
+  it('o que cai entre as linhas da tabela fica na faixa de baixo: 24,968 é Peso normal, 18,48 é Abaixo do peso', () => {
+    expect(classificar(calcularImcEmDecimos(179, 80_000)).codigo).toBe('PESO_NORMAL')
+    expect(classificar(calcularImcEmDecimos(100, 18_480)).codigo).toBe('ABAIXO_DO_PESO')
+  })
+
+  it('o IMC exibido e a classificação sempre concordam com o IMC exato', () => {
+    // Faixa pelo valor exato, em inteiros: IMC >= mínimo  <=>  gramas × 100 >= mínimo em décimos × cm².
+    const faixaExata = (alturaCm: number, pesoG: number): string | undefined =>
+      FAIXAS_IMC.findLast((faixa) => pesoG * 100 >= faixa.minimoEmDecimos * alturaCm * alturaCm)?.codigo
+    for (let alturaCm = 140; alturaCm <= 210; alturaCm += 1) {
+      for (let pesoG = 35_000; pesoG <= 160_000; pesoG += 97) {
+        expect(classificar(calcularImcEmDecimos(alturaCm, pesoG)).codigo).toBe(faixaExata(alturaCm, pesoG))
+      }
+    }
   })
 
   it('uma faixa nova é uma linha nova no catálogo: nenhuma função muda', () => {

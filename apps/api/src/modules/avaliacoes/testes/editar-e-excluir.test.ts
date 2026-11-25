@@ -27,7 +27,7 @@ describe('EditarAvaliacao', () => {
   it('o professor corrige a própria avaliação e o IMC é recalculado (RN5)', async () => {
     const { editar, avaliacoes } = await montar()
     const resultado = await editar.executar(comoPaulo, 'av-1', { pesoKg: 90 })
-    expect(resultado.avaliacao).toMatchObject({ pesoG: 90_000, imcEmDecimos: 294, classificacao: 'SOBREPESO' })
+    expect(resultado.avaliacao).toMatchObject({ pesoG: 90_000, imcEmDecimos: 293, classificacao: 'SOBREPESO' })
     expect(resultado.avaliacao.atualizadoEm).toBe(DEPOIS)
     expect(resultado.avaliacao.criadoEm).toBe(existente.criadoEm)
     expect(await avaliacoes.buscarPorId('av-1')).toEqual(resultado.avaliacao)
