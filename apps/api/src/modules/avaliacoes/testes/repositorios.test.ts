@@ -51,7 +51,7 @@ describe.each([
     await repositorio().salvar(avaliacao)
     expect(await repositorio().buscarPorId('a1')).toEqual(avaliacao)
     await repositorio().salvar(novaAvaliacao({ id: 'a1', pesoG: 90_000 }))
-    expect(await repositorio().buscarPorId('a1')).toMatchObject({ pesoG: 90_000, imcEmDecimos: 294 })
+    expect(await repositorio().buscarPorId('a1')).toMatchObject({ pesoG: 90_000, imcEmDecimos: 293 })
     expect((await repositorio().listar({ pagina: 1, limite: 10 })).total).toBe(1)
     expect(await repositorio().buscarPorId('inexistente')).toBeUndefined()
   })

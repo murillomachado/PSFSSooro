@@ -59,7 +59,7 @@ export const avaliacaoRespostaSchema = z.object({
   dataAvaliacao: z.string(),
   alturaM: z.number(),
   pesoKg: z.number(),
-  /** IMC com uma casa decimal, já arredondado. */
+  /** IMC com uma casa decimal, truncado (24,96 é 24,9), na mesma faixa que o IMC exato. */
   imc: z.number(),
   classificacao: z.object({ codigo: z.string(), descricao: z.string() }),
   criadoEm: z.string(),
