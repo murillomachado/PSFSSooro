@@ -79,4 +79,24 @@ test.describe('RF6 e RN8: autenticação', () => {
     expect(inicio).toContain('Evolução do IMC')
     expect(inicio).toContain('Pam Beesly · 6 avaliações')
   })
+
+  test('o navegador aproveita a tela que veio do servidor, sem erro de hidratação', async ({ page }) => {
+    const erros: string[] = []
+    page.on('pageerror', (erro) => erros.push(`${page.url()}: ${erro.message}`))
+    // Cada tela aberta do zero (goto), como quem chega por um link ou recarrega a página.
+    const telas = [
+      ['michael.scott', ['/inicio', '/avaliacoes', '/usuarios']],
+      ['dwight.schrute', ['/inicio', '/avaliacoes', '/usuarios']],
+      ['pam.beesly', ['/inicio', '/avaliacoes']],
+    ] as const
+    for (const [usuario, caminhos] of telas) {
+      await entrarComSucesso(page, usuario)
+      for (const caminho of caminhos) {
+        await page.goto(caminho)
+        await page.waitForLoadState('networkidle')
+      }
+      await sair(page)
+    }
+    expect(erros).toEqual([])
+  })
 })

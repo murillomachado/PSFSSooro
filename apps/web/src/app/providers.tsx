@@ -6,6 +6,7 @@ import { type ReactNode, useState } from 'react'
 import { Avisos } from '@/components/ui/Avisos.tsx'
 import { ProvedorDeTema } from '@/components/ui/BotaoDeTema.tsx'
 import { sistema } from '@/theme/sistema.ts'
+import { RegistroDeEstilos } from './RegistroDeEstilos.tsx'
 
 export function Providers({ children }: { readonly children: ReactNode }) {
   // Os dados que o servidor entregou junto com a página valem por 30 segundos: sem isso, o navegador
@@ -13,12 +14,14 @@ export function Providers({ children }: { readonly children: ReactNode }) {
   const [clienteDeConsultas] = useState(() => new QueryClient({ defaultOptions: { queries: { staleTime: 30_000 } } }))
   return (
     <QueryClientProvider client={clienteDeConsultas}>
-      <ChakraProvider value={sistema}>
-        <ProvedorDeTema>
-          {children}
-          <Avisos />
-        </ProvedorDeTema>
-      </ChakraProvider>
+      <RegistroDeEstilos>
+        <ChakraProvider value={sistema}>
+          <ProvedorDeTema>
+            {children}
+            <Avisos />
+          </ProvedorDeTema>
+        </ChakraProvider>
+      </RegistroDeEstilos>
     </QueryClientProvider>
   )
 }
